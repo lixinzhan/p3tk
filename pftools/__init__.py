@@ -1,1 +1,1 @@
-from readPFile import readPFile
+from .readPFile import readPFile
