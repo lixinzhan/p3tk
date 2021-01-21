@@ -1,0 +1,17 @@
+venv/bin/
+venv/lib/
+venv/share/
+venv/lib64
+venv/pyvenv.cfg
+log/*
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+*.log
+
+!log/README.md
