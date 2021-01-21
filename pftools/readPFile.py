@@ -171,38 +171,38 @@ def readPFile(filename, ptype):
 
 if __name__ == '__main__':
     FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
-    logging.basicConfig(format=FORMAT, filename='test.log', level=logging.INFO)
+    logging.basicConfig(format=FORMAT, filename='../logs/test.log', level=logging.INFO)
 
     # plan.Points
-    Points = readPFile('plan.Points', 'plan.Points')
+    Points = readPFile('../examples/Patient_6204/Plan_0/plan.Points', 'plan.Points')
     print(Points.Poi[1].Color)
 
     # plan.roi
-    ROIs = readPFile('plan.roi', 'plan.roi')
+    ROIs = readPFile('../examples/Patient_6204/Plan_0/plan.roi', 'plan.roi')
     print(len(ROIs.roi[0].curve))
 
     # ImageSet.header
-    Header = readPFile('ImageSet_0.header', 'ImageSet.header')
+    Header = readPFile('../examples/Patient_6204/ImageSet_0.header', 'ImageSet.header')
     print(Header.y_start, ' -- ', Header.dim_units)
 
     # Patient
-    Patient = readPFile('Patient', 'Patient')
+    Patient = readPFile('../examples/Patient_6204/Patient', 'Patient')
     print(Patient.PlanList.Plan[0].PlanName)
 
     # ImageSet.ImageInfo
-    ImageInfo = readPFile('ImageSet_0.ImageInfo', 'ImageSet.ImageInfo')
+    ImageInfo = readPFile('../examples/Patient_6204/ImageSet_0.ImageInfo', 'ImageSet.ImageInfo')
     print(ImageInfo.ImageInfo[0].TablePosition, ImageInfo.ImageInfo[2].SliceNumber)
 
     # ImageSet.ImageSet
-    ImageSet = readPFile('ImageSet_0.ImageSet', 'ImageSet.ImageSet')
+    ImageSet = readPFile('../examples/Patient_6204/ImageSet_0.ImageSet', 'ImageSet.ImageSet')
     print(ImageSet.NumberOfImages)
 
     # plan.PatientSetup
-    PatientSetup = readPFile('plan.PatientSetup', 'plan.PatientSetup')
+    PatientSetup = readPFile('../examples/Patient_6204/Plan_0/plan.PatientSetup', 'plan.PatientSetup')
     print(PatientSetup.Position)
 
     # plan.Trial
-    PlanTrial = readPFile('plan.Trial', 'plan.Trial')
+    PlanTrial = readPFile('../examples/Patient_6204/Plan_0/plan.Trial', 'plan.Trial')
     print(PlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose)
     print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points[30])
     #print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points.split(',')[30])
