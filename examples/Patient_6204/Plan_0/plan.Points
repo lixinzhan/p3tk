@@ -1,0 +1,71 @@
+Poi ={
+  Name = "CT REF";
+  XCoord = -0.0353947;
+  YCoord = -77.1847;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "red";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Off";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "jwhite";
+    CreateTimeStamp = "2007-01-09 10:08:42";
+    WriteTimeStamp = "2007-01-29 15:07:08";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "isocentre";
+  XCoord = 9.77164;
+  YCoord = -70.9301;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 20;
+  Color = "green";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "jwhite";
+    CreateTimeStamp = "2007-01-09 10:08:53";
+    WriteTimeStamp = "2007-01-29 15:07:08";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "tattoo";
+  XCoord = -0.954868;
+  YCoord = -79.6225;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 20;
+  Color = "blue";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "jwhite";
+    CreateTimeStamp = "2007-01-09 10:08:53";
+    WriteTimeStamp = "2007-01-29 15:07:08";
+    LastModifiedTimeStamp = "";
+  };
+};
+
+/* вс */

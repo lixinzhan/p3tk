@@ -1,0 +1,24 @@
+PatientName = "LAST, FRSTNAM, ";
+Institution = "Radiation Oncology,GRRCC,Panjwani,version-7.4f";
+PlanName = "LT BREAST";
+Planner = "jw";
+PatientID = 6204;
+LastName = "LAST";
+FirstName = "FRSTNAM";
+MiddleName = "";
+MedicalRecordNumber = "00693030";
+EncounterNumber = "";
+Physician = "VB";
+Prescription = "";
+Disease = "";
+Diagnosis = "";
+Comment = "";
+Gender = "Female";
+DateOfBirth = "";
+Physicist = "";
+PlanPath = "Institution_165/Mount_0/Patient_6204/Plan_0";
+TimeStamp = "Thu Jul 19 17:30:06 2007";
+PrimaryImageType = "Images";
+OKForSyntegra = 0;
+
+/* 1ß */

@@ -1,0 +1,51 @@
+	byte_order = 0;
+	read_conversion = "";
+	write_conversion = "";
+	t_dim = 0;
+	x_dim = 512;
+	y_dim = 512;
+	z_dim = 98;
+	datatype = 1;
+	bitpix = 16;
+	bytes_pix = 2;
+	vol_max = 0.000000;
+	vol_min = 0.000000;
+	t_pixdim = 0.000000;
+	x_pixdim = 0.101562;
+	y_pixdim = 0.101562;
+	z_pixdim = 0.300000;
+	t_start = 0.000000;
+	x_start = -25.949219;
+	y_start = -102.399216;
+	z_start = -31.768801;
+	z_time = 0.000000;
+	dim_units : 
+	voxel_type : 
+	id = 0;
+	vis_only = 0;
+	data_type : 
+	vol_type : 
+	db_name : LAST^FRSTNAM^
+	medical_record : 
+	originator : 
+	date : 2007-01-09
+	scanner_id : 
+	patient_position : HFS
+	orientation = 0;
+	scan_acquisition = 0;
+	comment : 
+	fname_format : 
+	fname_index_start = 0;
+	fname_index_delta = 0;
+	binary_header_size = 0;
+	manufacturer : Philips
+	model : AcQSimCT
+	couch_pos = 0.000000;
+	couch_height = 24.450001;
+	X_offset = 0.000000;
+	Y_offset = 0.000000;
+	dataset_modified = 0;
+	study_id : 5585
+	exam_id : 12636
+	patient_id : 00693030
+	modality : CT

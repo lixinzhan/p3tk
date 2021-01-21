@@ -1,0 +1,117 @@
+Poi ={
+  Name = "CT REF";
+  XCoord = -0.0353947;
+  YCoord = -77.1847;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "red";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Off";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "kfleming";
+    CreateTimeStamp = "2007-01-09 10:08:42";
+    WriteTimeStamp = "2007-02-16 14:16:27";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "isocentre";
+  XCoord = 9.77164;
+  YCoord = -70.9301;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 0.5;
+  Color = "green";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Off";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "kfleming";
+    CreateTimeStamp = "2007-01-09 10:08:53";
+    WriteTimeStamp = "2007-02-16 14:16:27";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "tattoo";
+  XCoord = -0.954868;
+  YCoord = -79.6225;
+  ZCoord = -15.5688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "blue";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "kfleming";
+    CreateTimeStamp = "2007-01-09 10:08:53";
+    WriteTimeStamp = "2007-02-16 14:16:27";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "e iso";
+  XCoord = 14.7128;
+  YCoord = -71.6752;
+  ZCoord = -17.67;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 0.5;
+  Color = "yellow";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "kfleming";
+    CreateTimeStamp = "2007-01-24 12:06:44";
+    WriteTimeStamp = "2007-02-16 14:16:27";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "e calc";
+  XCoord = 11.45;
+  YCoord = -71.6074;
+  ZCoord = -17.0688;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 0.5;
+  Color = "purple";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v7.4f";
+    CreateVersion = "Pinnacle v7.4f";
+    LoginName = "kfleming";
+    CreateTimeStamp = "2007-01-24 12:06:45";
+    WriteTimeStamp = "2007-02-16 14:16:27";
+    LastModifiedTimeStamp = "";
+  };
+};
+
+/* <À */

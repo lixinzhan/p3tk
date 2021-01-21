@@ -1,0 +1,83 @@
+NormalizationMode .ShortName = "PctPOI";
+LineList ={
+  IsodoseLine ={
+    IsoValue = 114;
+    Color = "khaki";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 110;
+    Color = "blue";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 105;
+    Color = "green";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 100;
+    Color = "red";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 95;
+    Color = "yellow";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 90;
+    Color = "purple";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 80;
+    Color = "skyblue";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 70;
+    Color = "orange";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 50;
+    Color = "forest";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 30;
+    Color = "slateblue";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+};
+ObjectVersion ={
+  WriteVersion = "Pinnacle v7.4f";
+  CreateVersion = "Pinnacle v7.4f";
+  LoginName = "kfleming";
+  CreateTimeStamp = "2007-01-09 10:08:04";
+  WriteTimeStamp = "2007-02-16 14:16:27";
+  LastModifiedTimeStamp = "";
+};
+
+/* ðp */

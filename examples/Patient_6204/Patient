@@ -1,0 +1,96 @@
+PatientID = 6204;
+PatientPath = "Institution_165/Mount_0/Patient_6204";
+LastName = "LAST";
+FirstName = "FRSTNAM";
+MiddleName = "";
+MedicalRecordNumber = "00693030";
+EncounterNumber = "";
+PrimaryPhysician = "";
+AttendingPhysician = "";
+ReferringPhysician = "";
+RadiationOncologist = "VB";
+Oncologist = "";
+Radiologist = "";
+Prescription = "";
+Disease = "";
+Diagnosis = "";
+Comment = "";
+NextUniquePlanID = 2;
+NextUniqueImageSetID = 1;
+Gender = "Female";
+DateOfBirth = "";
+ImageSetList ={
+  ImageSet ={
+    ImageSetID = 0;
+    PatientID = 6204;
+    ImageName = "ImageSet_0";
+    NameFromScanner = "LAST^FRSTNAM^";
+    ExamID = "12636";
+    StudyID = "5585";
+    Modality = "CT";
+    NumberOfImages = 98;
+    ScanTimeFromScanner = "2007-01-09";
+    FileName = "";
+  };
+};
+PlanList ={
+  Plan ={
+    PlanID = 0;
+    ToolType = "Pinnacle^3";
+    PlanName = "LT BREAST";
+    Physicist = "";
+    Comment = "";
+    Dosimetrist = "jw";
+    PrimaryCTImageSetID = 0;
+    FusionIDArray ={
+    };
+    PrimaryImageType = "Images";
+    PinnacleVersionDescription = "Pinnacle 7.4f";
+    IsNewPlanPrefix = 1;
+    PlanIsLocked = 1;
+    OKForSyntegraInLaunchpad = 0;
+    ObjectVersion ={
+      WriteVersion = "Launch Pad: 3.4d";
+      CreateVersion = "Launch Pad: 3.4d";
+      LoginName = "mgallamo";
+      CreateTimeStamp = "2007-01-09 10:07:54";
+      WriteTimeStamp = "2007-07-19 17:30:06";
+      LastModifiedTimeStamp = "";
+    };
+  };
+  Plan ={
+    PlanID = 1;
+    ToolType = "Pinnacle^3";
+    PlanName = "LT BRST E BST";
+    Physicist = "";
+    Comment = "";
+    Dosimetrist = "jw";
+    PrimaryCTImageSetID = 0;
+    FusionIDArray ={
+    };
+    PrimaryImageType = "Images";
+    PinnacleVersionDescription = "Pinnacle 7.4f";
+    IsNewPlanPrefix = 1;
+    PlanIsLocked = 1;
+    OKForSyntegraInLaunchpad = 0;
+    ObjectVersion ={
+      WriteVersion = "Launch Pad: 3.4d";
+      CreateVersion = "Launch Pad: 3.4d";
+      LoginName = "mgallamo";
+      CreateTimeStamp = "2007-01-09 10:07:54";
+      WriteTimeStamp = "2007-07-19 17:30:06";
+      LastModifiedTimeStamp = "";
+    };
+  };
+};
+ObjectVersion ={
+  WriteVersion = "Launch Pad: 3.4d";
+  CreateVersion = "Launch Pad: 3.4d";
+  LoginName = "mgallamo";
+  CreateTimeStamp = "2007-01-09 09:43:34";
+  WriteTimeStamp = "2007-07-19 17:30:06";
+  LastModifiedTimeStamp = "";
+};
+DirSize = 116.629;
+
+/* ôŠ */
