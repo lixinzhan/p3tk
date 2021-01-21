@@ -1,0 +1,12 @@
+ImageSetID = 0;
+PatientID = 0;
+ImageName = "";
+NameFromScanner = "LAST^FRSTNAM^";
+ExamID = "12636";
+StudyID = "5585";
+Modality = "CT";
+NumberOfImages = 98;
+ScanTimeFromScanner = "2007-01-09";
+FileName = "";
+
+/* y« */

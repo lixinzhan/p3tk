@@ -1,0 +1,14 @@
+Position = "On back (supine)";
+Orientation = "Head First Into Scanner";
+TableMotion = "Table Moves Into Scanner";
+ProductionLevel = 1;
+ObjectVersion ={
+  WriteVersion = "Pinnacle v7.4f";
+  CreateVersion = "Pinnacle v7.4f";
+  LoginName = "jwhite";
+  CreateTimeStamp = "2007-01-09 10:08:04";
+  WriteTimeStamp = "2007-01-29 15:07:08";
+  LastModifiedTimeStamp = "";
+};
+
+/* _h */
