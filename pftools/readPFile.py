@@ -60,6 +60,7 @@ def readPFile(filename, ptype):
         newtext.append(line)
     #for line in newtext:
     #    print(line[:-1])
+    text.close()
     logging.info('comments removed and indent corrected')
     ################################################
     
@@ -170,39 +171,43 @@ def readPFile(filename, ptype):
     return pystruct
 
 if __name__ == '__main__':
+    prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
+
     FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
-    logging.basicConfig(format=FORMAT, filename='../logs/test.log', level=logging.INFO)
+    logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
+
+    logging.info('Project foler is %s' % os.path.abspath(prjpath))
 
     # plan.Points
-    Points = readPFile('../examples/Patient_6204/Plan_0/plan.Points', 'plan.Points')
+    Points = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Points', 'plan.Points')
     print(Points.Poi[1].Color)
 
     # plan.roi
-    ROIs = readPFile('../examples/Patient_6204/Plan_0/plan.roi', 'plan.roi')
+    ROIs = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.roi', 'plan.roi')
     print(len(ROIs.roi[0].curve))
 
     # ImageSet.header
-    Header = readPFile('../examples/Patient_6204/ImageSet_0.header', 'ImageSet.header')
+    Header = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.header', 'ImageSet.header')
     print(Header.y_start, ' -- ', Header.dim_units)
 
     # Patient
-    Patient = readPFile('../examples/Patient_6204/Patient', 'Patient')
+    Patient = readPFile(prjpath+'examples/Patient_6204/Patient', 'Patient')
     print(Patient.PlanList.Plan[0].PlanName)
 
     # ImageSet.ImageInfo
-    ImageInfo = readPFile('../examples/Patient_6204/ImageSet_0.ImageInfo', 'ImageSet.ImageInfo')
+    ImageInfo = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageInfo', 'ImageSet.ImageInfo')
     print(ImageInfo.ImageInfo[0].TablePosition, ImageInfo.ImageInfo[2].SliceNumber)
 
     # ImageSet.ImageSet
-    ImageSet = readPFile('../examples/Patient_6204/ImageSet_0.ImageSet', 'ImageSet.ImageSet')
+    ImageSet = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageSet', 'ImageSet.ImageSet')
     print(ImageSet.NumberOfImages)
 
     # plan.PatientSetup
-    PatientSetup = readPFile('../examples/Patient_6204/Plan_0/plan.PatientSetup', 'plan.PatientSetup')
+    PatientSetup = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.PatientSetup', 'plan.PatientSetup')
     print(PatientSetup.Position)
 
     # plan.Trial
-    PlanTrial = readPFile('../examples/Patient_6204/Plan_0/plan.Trial', 'plan.Trial')
+    PlanTrial = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Trial', 'plan.Trial')
     print(PlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose)
     print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points[30])
     #print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points.split(',')[30])
