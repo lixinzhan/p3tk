@@ -6,13 +6,14 @@ The structure of the Object coreated will be dynamic based on the file readin.
 To use some data, a few checks must be performed first. 
 The group of data are list below:
 
-1. plan.Trial as the input
+1. CPManagerObject --- plan.Trial as the input
 
-CPManagerObject under CPManager does not always exist
+CPManagerObject under CPManager does not always exist. This code processed it by making all under CPManager 
+copied to CPManagerObject[0]. Ideally, no special handling is required.
 
-2. plan.Trial as the input
+2. ContourList --- plan.Trial as the input
 
-ContourList under BeamModifier does not always exist 
+ContourList under BeamModifier does not always exist. Check if Contourlist is None should it be used.
 
 '''
 
@@ -23,6 +24,7 @@ import re
 import json
 import yaml
 from yaml.loader import FullLoader
+from copy import deepcopy
 
 class obj(object):
     def __init__(self, dict_):
@@ -163,35 +165,28 @@ def readPFile(filename, ptype):
         beam = yobj['Trial']['BeamList']['Beam']
         nbeams = len(beam)
         for ibeam in range(nbeams):
-            if 'CPManagerObject' in beam[ibeam]['CPManager']:
-                cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
-                ncpmObject = len(cpmObject)
-                hascpmobj = True
-            else:  # there is no CPManagerObject for some plans, such as e plan.
+            if 'CPManagerObject' not in beam[ibeam]['CPManager']:
                 cpmObject = beam[ibeam]['CPManager']
-                ncpmObject = 1
-                hascpmobj =False
+                yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'] = [ deepcopy(cpmObject) ]
+            cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
+            ncpmObject = len(cpmObject)
 
             for icpm in range(ncpmObject):
-                if hascpmobj:
-                    cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
-                else:
-                    cpts = cpmObject['ControlPointList']['ControlPoint']
+                cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
+                cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
                 ncpts = len(cpts)
                 for icpts in range(ncpts):
                     leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
-                    if hascpmobj:
-                        yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
-                    else:
-                        yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                    cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                    #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                     modifier = cpts[icpts]['ModifierList']['BeamModifier']
                     nmodifier = len(modifier)
                     if modifier[0]['ContourList'] is None:
                         continue # electron cases (or some other cases too?)
                     for imodifier in range(nmodifier):
                         pts = [float(pt) for pt in modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points'].split(',')]
-                        yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
-                        #modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts.split(',')
+                        #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
+                        modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
         logging.info('post-processing dict for Points in plan.Trial done')
 
 
