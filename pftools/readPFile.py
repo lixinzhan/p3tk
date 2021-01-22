@@ -1,3 +1,21 @@
+'''
+readPFile
+
+The structure of the Object coreated will be dynamic based on the file readin.
+
+To use some data, a few checks must be performed first. 
+The group of data are list below:
+
+1. plan.Trial as the input
+
+CPManagerObject under CPManager does not always exist
+
+2. plan.Trial as the input
+
+ContourList under BeamModifier does not always exist 
+
+'''
+
 import os
 import sys
 import logging
@@ -145,18 +163,32 @@ def readPFile(filename, ptype):
         beam = yobj['Trial']['BeamList']['Beam']
         nbeams = len(beam)
         for ibeam in range(nbeams):
-            cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
-            ncpmObject = len(cpmObject)
+            if 'CPManagerObject' in beam[ibeam]['CPManager']:
+                cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
+                ncpmObject = len(cpmObject)
+                hascpmobj = True
+            else:  # there is no CPManagerObject for some plans, such as e plan.
+                cpmObject = beam[ibeam]['CPManager']
+                ncpmObject = 1
+                hascpmobj =False
+
             for icpm in range(ncpmObject):
-                cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
+                if hascpmobj:
+                    cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
+                else:
+                    cpts = cpmObject['ControlPointList']['ControlPoint']
                 ncpts = len(cpts)
                 for icpts in range(ncpts):
                     leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
-                    yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                    if hascpmobj:
+                        yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                    else:
+                        yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                     modifier = cpts[icpts]['ModifierList']['BeamModifier']
                     nmodifier = len(modifier)
+                    if modifier[0]['ContourList'] is None:
+                        continue # electron cases (or some other cases too?)
                     for imodifier in range(nmodifier):
-                        #pass
                         pts = [float(pt) for pt in modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points'].split(',')]
                         yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
                         #modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts.split(',')
