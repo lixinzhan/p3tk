@@ -45,7 +45,8 @@ def readPFile(filename, ptype):
     elif ptype == 'ImageSet.ImageInfo':
         strlist = ['ImageInfo ={']
     elif ptype == 'plan.Trial':
-        strlist = ['Prescription ={', 'Beam ={', 'CPManagerObject ={', 'FilmImage ={', 'BeamModifier ={']
+        strlist = ['Prescription ={', 'Beam ={', 'CPManagerObject ={', 
+                    'FilmImage ={', 'BeamModifier ={', 'CurvePainter ={']
     ystr = ''
 
     logging.info('reading in %s with type %s done.' % (filename, ptype))
@@ -184,9 +185,12 @@ def readPFile(filename, ptype):
                     if modifier[0]['ContourList'] is None:
                         continue # electron cases (or some other cases too?)
                     for imodifier in range(nmodifier):
-                        pts = [float(pt) for pt in modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points'].split(',')]
-                        #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
-                        modifier[imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
+                        curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
+                        ncurvepainter = len(curvepainter)
+                        for icurve in range(ncurvepainter):
+                            pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
+                            #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
+                            curvepainter[icurve]['Curve']['RawData']['Points']=pts
         logging.info('post-processing dict for Points in plan.Trial done')
 
 

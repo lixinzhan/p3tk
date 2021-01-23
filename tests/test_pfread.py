@@ -136,7 +136,31 @@ def test_planroi_read():
             'g/cm^3'
         )
 
-def test_plantrial1_read():
+def test0_plantrial0_read():
+    assert (PlanTrial0.Trial.Name,
+            PlanTrial0.Trial.DoseGridVoxelSizeX,
+            PlanTrial0.Trial.DoseGridOriginY,
+            PlanTrial0.Trial.PrescriptionList.Prescription[0].PrescriptionDose,
+            PlanTrial0.Trial.BeamList.Beam[0].IsocenterName,
+            PlanTrial0.Trial.BeamList.Beam[0].DosePerMuAtPrescriptionPoint,
+            PlanTrial0.Trial.BeamList.Beam[0].MachineNameAndVersion,
+            PlanTrial0.Trial.BeamList.Beam[0].Modality,
+            PlanTrial0.Trial.BeamList.Beam[0].MachineEnergyName,
+            PlanTrial0.Trial.BeamList.Beam[0].SetBeamType
+        ) == (
+            'sMLC',
+            0.4,
+            -83.7535,
+            4250,
+            'isocentre',
+            1,
+            'EX_7p4: 2006-03-06 11:59:38',
+            'Photons',
+            '6X',
+            'Step & Shoot MLC'
+        )
+
+def test0_plantrial1_read():
     assert (PlanTrial1.Trial.Name,
             PlanTrial1.Trial.DoseGridVoxelSizeX,
             PlanTrial1.Trial.DoseGridOriginY,
@@ -144,6 +168,8 @@ def test_plantrial1_read():
             PlanTrial1.Trial.BeamList.Beam[0].IsocenterName,
             PlanTrial1.Trial.BeamList.Beam[0].DosePerMuAtPrescriptionPoint,
             PlanTrial1.Trial.BeamList.Beam[0].MachineNameAndVersion,
+            PlanTrial1.Trial.BeamList.Beam[0].Modality,
+            PlanTrial1.Trial.BeamList.Beam[0].MachineEnergyName,
             PlanTrial1.Trial.BeamList.Beam[0].SetBeamType
         ) == (
             'Direct Electron',
@@ -153,5 +179,122 @@ def test_plantrial1_read():
             'e iso',
             1,
             'EX_7p4: 2006-03-06 11:59:38',
+            'Electrons',
+            '16e',
             'Static'
+        )
+
+def test1_plantrial0_controlpoint_read():
+    cp1 = PlanTrial0.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1]
+    assert (cp1.Gantry,
+            cp1.LeftJawPosition,
+            cp1.WedgeContext.WedgeName,
+            cp1.WedgeContext.Orientation,
+            cp1.WedgeContext.Angle,
+            cp1.ModifierList.BeamModifier[0].Name,
+            cp1.ModifierList.BeamModifier[0].StructureToBlock,
+            cp1.ModifierList.BeamModifier[0].Margin,
+            cp1.ModifierList.BeamModifier[0].InsideMode,
+            cp1.ModifierList.BeamModifier[0].ContourList.CurvePainter[1].Curve.RawData.Points[1],
+            cp1.MLCLeafPositions.RawData.NumberOfPoints,
+            cp1.MLCLeafPositions.RawData.Points[30],
+            cp1.MLCLeafPositions.RawData.Points[95],
+            cp1.MLCLeafPositions.RowLabelList.RowLabel[1].String
+        ) == (
+            306,
+            4.2,
+            'No Wedge',
+            'NoWedge',
+            'No Wedge',
+            'BeamModifier_1',
+            'Manual',
+            0,
+            'Block',
+            -9.29816,
+            60,
+            3.9,
+            6.3,
+            '  2. Y : -18.50 cm'
+        )
+
+def test1_plantrial1_controlpoint_read():
+    cp0 = PlanTrial1.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0]
+    assert (cp0.Gantry,
+            cp0.LeftJawPosition,
+            cp0.WedgeContext.WedgeName,
+            cp0.WedgeContext.Orientation,
+            cp0.WedgeContext.Angle,
+            cp0.ModifierList.BeamModifier[0].Name,
+            cp0.ModifierList.BeamModifier[0].StructureToBlock,
+            cp0.ModifierList.BeamModifier[0].Margin,
+            cp0.ModifierList.BeamModifier[0].InsideMode,
+            cp0.MLCLeafPositions.RawData.NumberOfPoints,
+            cp0.MLCLeafPositions.RawData.Points[1],
+            cp0.MLCLeafPositions.RawData.Points[119],
+            cp0.MLCLeafPositions.RowLabelList.RowLabel[1].String
+        ) == (
+            90,
+            3,
+            'No Wedge',
+            'NoWedge',
+            'No Wedge',
+            'BeamModifier_1',
+            'boost',
+            1,
+            'Expose',
+            60,
+            3,
+            3,
+            '  2. Y : -18.50 cm'
+        )
+
+def test2_plantrial0_controlpoint_read():
+    beam1 = PlanTrial0.Trial.BeamList.Beam[1]
+    assert (beam1.UseMLC,
+            beam1.ElectronApplicatorName,
+            beam1.Bolus.Type,
+            beam1.Bolus.Density,
+            beam1.Bolus.Thickness,
+            beam1.Compensator.IsValid,
+            beam1.CompensatorScaleFactor,
+            beam1.MonitorUnitInfo.PrescriptionDose,
+            beam1.MonitorUnitInfo.PrescriptionPointDepth,
+            beam1.Name,
+            beam1.SSD
+        ) == (
+            1,
+            'None',
+            'No bolus',
+            1,
+            2,
+            0,
+            0,
+            39.8434,
+            8.19073,
+            'Med 15',
+            91.8093
+        )
+def test2_plantrial1_controlpoint_read():
+    beam0 = PlanTrial1.Trial.BeamList.Beam[0]
+    assert (beam0.UseMLC,
+            beam0.ElectronApplicatorName,
+            beam0.Bolus.Type,
+            beam0.Bolus.Density,
+            beam0.Bolus.Thickness,
+            beam0.Compensator.IsValid,
+            beam0.CompensatorScaleFactor,
+            beam0.MonitorUnitInfo.PrescriptionDose,
+            beam0.MonitorUnitInfo.PrescriptionPointDepth,
+            beam0.SSD
+        ) == (
+            0,
+            '6x6 cone',
+            'No bolus',
+            1,
+            2,
+            0,
+            0,
+            263.158,
+            3.31767,
+            100
         )
