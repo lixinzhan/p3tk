@@ -416,7 +416,7 @@ Trial ={
       BlockingMaskCutoffArea = 0.001;
       BlockAndTrayFactor = 0.051;
       TrayNumber = "";
-      BlockExportName = "lynnR";
+      BlockExportName = "lastR";
       BlockCutterFormat = "ParScientific";
       BlockJawOverlap = 1;
       TrayFactor = 0.95;
@@ -1215,4 +1215,4 @@ Trial ={
   PrintIMRTSummary = 0;
 };
 
-/* Íæ */
+/* ï¿½ï¿½ */
