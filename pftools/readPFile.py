@@ -26,12 +26,12 @@ import yaml
 from yaml.loader import FullLoader
 from copy import deepcopy
 
-class obj(object):
+class PFObj(object):
     def __init__(self, dict_):
         self.__dict__.update(dict_)
 
 def dict2obj(d):
-    return json.loads(json.dumps(d), object_hook=obj)
+    return json.loads(json.dumps(d), object_hook=PFObj)
 
 def readPFile(filename, ptype):
     text = open(filename, 'r', encoding='latin1')
