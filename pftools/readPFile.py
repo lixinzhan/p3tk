@@ -33,7 +33,7 @@ class PFObj(object):
 def dict2obj(d):
     return json.loads(json.dumps(d), object_hook=PFObj)
 
-def readPFile(filename, ptype):
+def readPFile(filename, ptype, outfmt=''):
     text = open(filename, 'r', encoding='latin1')
     strlist = ['% A string will never appear. %']
     if ptype == 'plan.Points':
@@ -141,6 +141,8 @@ def readPFile(filename, ptype):
     #print(ystr)
     logging.info(filename + ' conversion to yaml compatible format done')
     ################################################
+    if outfmt == 'yaml':
+        return ystr
     
     ################################################
     # convert to python dict from yaml
@@ -194,6 +196,8 @@ def readPFile(filename, ptype):
         logging.info('post-processing dict for Points in plan.Trial done')
 
 
+    if outfmt == 'dict':
+        return yobj
 
     ################################################
     # convert to python obj type
