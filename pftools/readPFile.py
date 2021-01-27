@@ -247,5 +247,5 @@ if __name__ == '__main__':
     print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points[30])
     #print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points.split(',')[30])
     print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RowLabelList.RowLabel[0].String)
-    print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0].ModifierList.BeamModifier[0].ContourList.CurvePainter.Curve.RawData.Points[4])
+    print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0].ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[4])
     
