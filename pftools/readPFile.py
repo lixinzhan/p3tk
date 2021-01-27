@@ -23,7 +23,7 @@ import logging
 import re
 import json
 import yaml
-from yaml.loader import FullLoader
+from yaml.loader import FullLoader, BaseLoader
 from copy import deepcopy
 
 class PFObj(object):
@@ -146,7 +146,7 @@ def readPFile(filename, ptype, outfmt=''):
     
     ################################################
     # convert to python dict from yaml
-    yobj = yaml.load(ystr, Loader=FullLoader)
+    yobj = yaml.load(ystr, Loader=BaseLoader)
     # print(yobj['Trial']['PrescriptionList']['Prescription'][0]['Color'])
     #print(yobj['Trial'])
     logging.info('yaml loaded as dict')
