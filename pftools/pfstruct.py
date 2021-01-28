@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from readPFile import readPFile
+from pftools.readPFile import readPFile
 
 class PBKStruct():
     def __init__(self, pbkfolder) -> None:

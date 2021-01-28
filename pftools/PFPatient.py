@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import (List, Optional)
 from pydantic import BaseModel
 import logging
-from readPFile import readPFile
+from pftools.readPFile import readPFile
 
 class _ImageSet(BaseModel):
     ImageSetID: int
