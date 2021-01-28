@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     pfImgSetHeader = PFImgSetHeader(**Pdict)
 
-    print(Pdict)
+    #print(Pdict)
 
     print(pfImgSetHeader.z_dim)
     print(pfImgSetHeader.z_pixdim)
