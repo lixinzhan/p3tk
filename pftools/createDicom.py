@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from pftools import readPFile
+from pftools.readPFile import readPFile
 
 def createDicom():
     pass

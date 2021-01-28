@@ -1,12 +1,11 @@
 import os
 import sys
 from datetime import datetime
-from typing import (Dict, List, Optional)
+from typing import (Dict, List, Optional, OptionalInt)
 from pydantic import BaseModel
 import logging
 
-from pydantic.types import OptionalInt
-from readPFile import readPFile
+from pftools.readPFile import readPFile
 
 class _RawData(BaseModel):
     NumberOfDimensions: Optional[int]

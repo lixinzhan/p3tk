@@ -1,7 +1,7 @@
 from logging import lastResort
 import os
 import pytest
-from pftools import readPFile
+from pftools.readPFile import readPFile
 import logging
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
