@@ -146,7 +146,10 @@ def readPFile(filename, ptype, outfmt=''):
     
     ################################################
     # convert to python dict from yaml
-    yobj = yaml.load(ystr, Loader=BaseLoader)
+    if outfmt == 'dict':
+        yobj = yaml.load(ystr, Loader=BaseLoader)
+    else:
+        yobj = yaml.load(ystr, Loader=FullLoader)
     # print(yobj['Trial']['PrescriptionList']['Prescription'][0]['Color'])
     #print(yobj['Trial'])
     logging.info('yaml loaded as dict')
