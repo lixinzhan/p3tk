@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import (Dict, List, Optional)
 from pydantic import BaseModel
 import logging
+
+from pydantic.types import OptionalInt
 from readPFile import readPFile
 
 class _RawData(BaseModel):
@@ -74,6 +76,34 @@ class _CPManagerObject(BaseModel):
 class _CPManager(BaseModel):
     CPManagerObject: List[_CPManagerObject] = None
 
+class _MonitorUnitInfo(BaseModel):
+    PrescriptionDose: Optional[float]
+    SourceToPrescriptionPointDistance: Optional[float]
+    TotalTransmissionFraction: Optional[float]
+    TransmissionDescription = ''
+    PrescriptionPointDepth: Optional[float]
+    PrescriptionPointRadDepth: Optional[float]
+    DepthToActualPoint: Optional[float]
+    SSDToActualPoint: Optional[float]
+    RadDepthToActualPoint: Optional[float]
+    PrescriptionPointRadDepthValid: Optional[int]
+    PrescriptionPointOffAxisDistance: Optional[float]
+    NormalizedDose: Optional[float]
+    OffAxisRatio: Optional[float]
+    CollimatorOutputFactor: Optional[float]
+    RelativeOutputFactor: Optional[float]
+    PhantomOutputFactor: Optional[float]
+    OFMeasurementDepth: Optional[float]
+    OutputFactorInfo = ''
+
+class _Bolus(BaseModel):
+    Type = ''
+    Density: Optional[float]
+    Thickness: Optional[float]
+
+class _Compensator(BaseModel):
+    Name = ''
+
 class _Beam(BaseModel):
       Name: str
       IsocenterName = ''
@@ -90,6 +120,36 @@ class _Beam(BaseModel):
       MachineEnergyName = ''
       SetBeamType = ''
       CPManager: Optional[_CPManager]
+      IMRTFilter = ''
+      IMRTWedge = ''
+      IMRTDirection = ''
+      IMRTParameterType = ''
+      PrevIMRTParameterType = ''
+      UseMLC: Optional[int]
+      DynamicBlocks: Optional[int]
+      CircularFieldDiameter: Optional[float]
+      ElectronApplicatorName = ''
+      SSD: Optional[float]
+      AvgSSD: Optional[float]
+      SSDValid: Optional[int]
+      LeftAutoSurroundMargin: Optional[float]
+      RightAutoSurroundMargin: Optional[float]
+      TopAutoSurroundMargin: Optional[float]
+      BottomAutoSurroundMargin: Optional[float]
+      AutoSurround: Optional[int]
+      OpenExtraLeafPairs: Optional[int]
+      BlockingMaskPixelSize: Optional[float]
+      BlockingMaskCutoffArea: Optional[float]
+      BlockAndTrayFactor: Optional[float]
+      TrayNumber = ''
+      BlockJawOverlap: Optional[float]
+      TrayFactor: Optional[float]
+      Bolus: Optional[_Bolus] = None
+      Compensator: Optional[_Compensator] = None
+      CompensatorScaleFactor: Optional[float]
+      ComputationVersion = ''
+      MonitorUnitInfo: Optional[_MonitorUnitInfo]
+
 
 class _BeamList(BaseModel):
     Beam: List[_Beam] = None
@@ -161,3 +221,6 @@ if __name__ == '__main__':
     print(cp0.MLCLeafPositions.RawData.NumberOfPoints)
     print(cp0.MLCLeafPositions.RawData.Points[27])
     print(cpmgr0.JawsConformance)
+    print(pfPlanTrial.Trial.BeamList.Beam[0].Bolus.Type)
+    print(pfPlanTrial.Trial.BeamList.Beam[0].Compensator.Name)    
+    print(pfPlanTrial.Trial.BeamList.Beam[3].MonitorUnitInfo.PrescriptionDose)
