@@ -33,6 +33,7 @@ class _PPlan():
 class PFBackup():
     def __init__(self, ptpath) -> None:
         fname = '%s/Patient' % ptpath
+        logging.info('Reading file: %s' % fname)
         pfdict = readPFile(fname, 'Patient', 'dict')
         self.Patient = PFPatient(**pfdict)
 
@@ -53,11 +54,13 @@ class PFBackup():
 
             # obtain header
             fname = '%s/ImageSet_%s.header' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'ImageSet.header', 'dict')
             imgset.Header = PFImgSetHeader(**pfdict)
 
             # obtain info for all slices
             fname = '%s/ImageSet_%s.ImageInfo' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'ImageSet.ImageInfo', 'dict')
             imgset.ImageInfoList = PFImgInfo(**pfdict)
 
@@ -71,26 +74,31 @@ class PFBackup():
 
             # PlanPatientSetup
             fname = '%s/Plan_%s/plan.PatientSetup' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'plan.PatientSetup', 'dict')
             pplan.PlanPatientSetup = PFPlanPatientSetup(**pfdict)
 
             # PlanInfo
             fname = '%s/Plan_%s/plan.PlanInfo' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'plan.PlanInfo', 'dict')
             pplan.PlanInfo = PFPlanInfo(**pfdict)
 
             # PlanPoints
             fname = '%s/Plan_%s/plan.Points' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'plan.Points', 'dict')
             pplan.PlanPoints = PFPlanPoints(**pfdict)
 
             # PlanROI
             fname = '%s/Plan_%s/plan.roi' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'plan.roi', 'dict')
             pplan.PlanROI = PFPlanROI(**pfdict)
 
             # PlanTrial
             fname = '%s/Plan_%s/plan.Trial' % (ptpath, id)
+            logging.info('Reading file: %s' % fname)
             pfdict = readPFile(fname, 'plan.Trial', 'dict')
             pplan.PlanTrial = PFPlanTrial(**pfdict)
 
