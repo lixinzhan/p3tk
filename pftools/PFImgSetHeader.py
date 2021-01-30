@@ -20,6 +20,7 @@ class PFImgSetHeader(BaseModel):
     y_start: float
     z_start: float
     id: Optional[int]
+    date = ''
     patient_position = ''
     binary_header_size: Optional[int]
     manufacturer = ''
