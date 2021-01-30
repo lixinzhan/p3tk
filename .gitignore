@@ -4,6 +4,7 @@ venv/share/
 venv/lib64
 venv/pyvenv.cfg
 log/*
+pftools/00003030/
 
 __pycache__/
 *.py[cod]
