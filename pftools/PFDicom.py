@@ -3,6 +3,7 @@ import sys
 import logging
 from pftools.PFImgInfo import PFImgInfo
 from pftools.PFBackup import PFBackup
+import pftools.common_dcm_settings as dcmcommon
 
 import pydicom.uid
 from pydicom.dataset import Dataset
@@ -27,6 +28,8 @@ class PFDicom():
                             self.PFBackup.Patient.MedicalRecordNumber)
         else:
             self.OutPath = outpath
+        if not os.path.exists(self.OutPath):
+            os.makedirs(os.path.dirname(self.OutPath), exist_ok=True)
 
         # dicom preamble and prefix
         self.Preamble = b'0' * 128
@@ -47,19 +50,24 @@ class PFDicom():
         for imgSet in self.PFBackup.ImageSet:
             ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgSet.ImageSetID)
             if os.path.exists(ctpath):
+                logging.info('Existing DICOM ImageSet. Copy to destination ...')
                 for ctfile in os.listdir(ctpath):
                     ds_ct = pydicom.dcmread(ctpath+ctfile)
                     instance_uid = ds_ct.SOPInstanceUID
                     fsrc = ctpath+ctfile
                     fdst = '%s/CT.%s.dcm' % (self.OutPath, instance_uid)
                     shutil.copy2(fsrc, fdst)
+                logging.info('ImageSet copy done.')
             else:
+                logging.info('No existing DICOM ImageSet. Generating ...')
                 self._createCTfromData(imgSet.ImageSetID)
+                logging.info('DICOM ImageSet generated.')
 
     def _createCTfromData(self, imgsetid) -> bool:
         datafile = '%s/ImageSet_%s.img' % (self.PFPath, imgsetid)
         if not os.path.isfile(datafile):
-            print('No CT Data found!')
+            print('No CT data file found: %s' % datafile)
+            logging.error('No CT data file found: %s' % datafile)
             return False
         
         img_header = self.PFBackup.ImageSet[imgsetid].Header
@@ -67,18 +75,16 @@ class PFDicom():
         img_info = self.PFBackup.ImageSet[imgsetid].ImageInfoList.ImageInfo
 
         bitpix = self.PFBackup.ImageSet[imgsetid].Header.bitpix
-        if bitpix == 16: dtype = np.uint16
-        elif bitpix == 8: dtype = np.uint8
-        elif bitpix == 32: dtype = np.uint32
+        if bitpix == 16: dtype = np.int16
+        elif bitpix == 8: dtype = np.int8
+        elif bitpix == 32: dtype = np.int32
         else: dtype = np.short
         x_dim = int(self.PFBackup.ImageSet[imgsetid].Header.x_dim)
         y_dim = int(self.PFBackup.ImageSet[imgsetid].Header.y_dim)
         z_dim = int(self.PFBackup.ImageSet[imgsetid].Header.z_dim)
-        alldata = np.fromfile(datafile, dtype)
-        slicelist = []
+        alldata = np.fromfile(datafile, dtype) - 1000  # ***
         for i in range(z_dim):
             slicedata = alldata[i*x_dim*y_dim:(i+1)*x_dim*y_dim]
-            #slicelist.append(slicedata)
 
             file_meta = FileMetaDataset()
             file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
@@ -93,8 +99,6 @@ class PFDicom():
 
             ds.SpecificCharacterSet = 'ISO_IR 100'
             ds.ImageType = r"ORIGINAL\PRIMARY\AXIAL"
-            ds.ImagePositionPatient = r"0\0\1"
-            ds.ImageOrientationPatient = r"1\0\0\0\-1\0"
             ds.SOPClassUID = img_info[i].ClassUID
             ds.SOPInstanceUID = img_info[i].InstanceUID
             ds.SeriesInstanceUID = img_info[i].SeriesUID
@@ -102,12 +106,25 @@ class PFDicom():
             ds.FrameOfReferenceUID = img_info[i].FrameUID
             ds.Modality = img_header.modality
             ds.Manufacturer = img_header.manufacturer
+            ds.ManufacturerModelName = img_header.model
+
+            ds.InstitutionName = dcmcommon.InstitutionName
+            ds.InstitutionAddress = dcmcommon.InstitutionAddress
+            ds.StationName = dcmcommon.StationName
+            ds.WindowCenter = dcmcommon.WindowCenter
+            ds.WindowWidth = dcmcommon.WindowWidth
 
             date_scan = imgset_info.ScanTimeFromScanner.replace('-','') # yyyy-mm-dd to yyyymmdd
             ds.StudyDate = date_scan
             ds.SeriesDate = date_scan
             ds.AcquisitionDate = date_scan
             ds.ContentDate = date_scan
+            ds.InstanceCreationDate = date_scan
+
+            ds.StudyID = str(img_header.study_id)
+            ds.SeriesNumber = ''
+            ds.AcquisitionNumber = ''
+            ds.InstanceNumber = ''
 
             ds.BitsStored = 16
             ds.BitsAllocated = 16
@@ -119,21 +136,31 @@ class PFDicom():
                                             self.PFBackup.Patient.MiddleName)
             ds.PatientID = self.PFBackup.Patient.MedicalRecordNumber
             ds.PatientBirthDate = self.PFBackup.Patient.DateOfBirth.replace('_','')
+            ds.PatientSex = self.PFBackup.Patient.Gender[0]
 
-            ds.RescaleIntercept = '-1024'
+            ds.RescaleIntercept = 0 # '-1024'
             ds.RescaleSlope = '1'
             ds.PixelRepresentation = 1
             ds.PhotometricInterpretation = "MONOCHROME2"
             ds.SamplesPerPixel = 1
-            # ds.ImagesInAcquisition = '1'
-            # ds.PixelRepresentation = 1
+            ds.PixelRepresentation = 1
+            ds.SmallestImagePixelValue = int(np.amin(slicedata))
+            ds.LargestImagePixelValue  = int(np.amax(slicedata))
+            ds.PatientOrientation = r'L\P'
+            ds.ImageOrientationPatient = r"1\0\0\0\-1\0"
+            # Couch height considered here. Could be useful for coord trans??
+            ds.ImagePositionPatient = [ -10*x_dim*img_header.x_pixdim/2,
+                    -10*(img_header.couch_height+y_dim*img_header.y_pixdim/2),
+                    -10*img_info[i].TablePosition]
 
-            ds.PixelSpacing = [img_header.x_pixdim*10.0, img_header.y_pixdim*10.0]
-            ds.SliceThickness = img_header.z_pixdim*10.0
+            ds.TableHeight = img_header.couch_height*10.0
             ds.Rows = x_dim
             ds.Columns = y_dim
             ds.NumberOfSlices = z_dim
-            ds.SliceLocation = img_info[i].TablePosition * 10.0
+            ds.PixelSpacing = [img_header.x_pixdim*10.0, img_header.y_pixdim*10.0]
+            ds.PixelAspectRatio = r"1\1"
+            ds.SliceThickness = img_header.z_pixdim*10.0
+            ds.SliceLocation = img_info[i].CouchPos * 10.0
             ds.InstanceNumber = img_info[i].SliceNumber
             ds.PatientPosition = img_header.patient_position
             if ds.PatientPosition in ['HFP', 'FFP']:
@@ -144,6 +171,9 @@ class PFDicom():
             pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
             ds.PixelData = slicedata.tobytes()
             ds.save_as(ofname)
+            logging.info('CT DICOM file saved: %s' % ofname)
+
+        return True
         
 
 if __name__ == '__main__':
