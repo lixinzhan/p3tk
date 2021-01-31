@@ -1,11 +1,14 @@
 import os
 import sys
 import logging
+import datetime
+
 from pftools.PFImgInfo import PFImgInfo
 from pftools.PFBackup import PFBackup
 import pftools.common_dcm_settings as dcmcommon
 
 import pydicom.uid
+import pydicom.sequence
 from pydicom.dataset import Dataset
 from pydicom.dataset import FileDataset
 from pydicom.dataset import FileMetaDataset
@@ -22,6 +25,13 @@ class PFDicom():
 
         # remember the input path and set the output path
         self.PFPath = pfpath
+        self.setOutputLocation(outpath)
+
+        # dicom preamble and prefix
+        self.Preamble = b'0' * 128
+        self.Prefix = 'DICM'
+
+    def setOutputLocation(self, outpath) -> None :
         self.OutPath = ''
         if outpath == '':
             self.OutPath = '%s/%s/' % (os.path.abspath(os.getcwd()), 
@@ -31,22 +41,8 @@ class PFDicom():
         if not os.path.exists(self.OutPath):
             os.makedirs(os.path.dirname(self.OutPath), exist_ok=True)
 
-        # dicom preamble and prefix
-        self.Preamble = b'0' * 128
-        self.Prefix = 'DICM'
-
     def createDicomCT(self):
         logging.info('Setting file meta information ...')
-        self.FileMeta = FileMetaDataset()
-
-        # Explicit VR Little Endian '1.2.840.10008.1.2.1'
-        self.FileMeta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
-
-        # CT Image Storage '1.2.840.10008.5.1.4.1.1.2'
-        self.FileMeta.MediaStorageSOPClassUID = ssopuids.CTImageStorage 
-        self.FileMeta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
-        self.FileMeta.ImplementationClassUID = pydicom.uid.generate_uid()
-
         for imgSet in self.PFBackup.ImageSet:
             ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgSet.ImageSetID)
             if os.path.exists(ctpath):
@@ -176,6 +172,46 @@ class PFDicom():
         return True
         
 
+    def createDicomRS(self):
+        for planinfo in self.PFBackup.Patient.PlanList.Plan:
+            logging.info('Setting file meta information for RS...')
+            planid = planinfo.PlanID
+            file_meta = FileMetaDataset()
+            file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+            file_meta.MediaStorageSOPClassUID = ssopuids.RTStructureSetStorage
+            file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
+
+            self._createDicomRS(self, file_meta, planid)
+    
+    def _createDicomRS(self, file_meta, planid=0):
+        ofname = '%s/RS.%s.dcm' % (self.OutPath, file_meta.MediaStorageSOPInstanceUID)
+        ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
+
+        ds.is_little_endian = True
+        ds.is_implicit_VR = False
+
+        ds.SpecificCharacterSet = 'ISO_IR 100'
+
+        ds.PatientName = '%s^%s^%s' % (self.PFBackup.Patient.LastName, 
+                                        self.PFBackup.Patient.FirstName, 
+                                        self.PFBackup.Patient.MiddleName)
+        ds.PatientID = self.PFBackup.Patient.MedicalRecordNumber
+        ds.PatientBirthDate = self.PFBackup.Patient.DateOfBirth.replace('_','')
+        ds.PatientSex = self.PFBackup.Patient.Gender[0]
+
+        ds.ReferencedStudySequence = pydicom.sequence.Sequence()
+
+        ds.InstanceCreationDate = datetime.time.strftime("%Y%m%d")
+        ds.InstanceCreationTime = datetime.time.strftime("%H%M%S")
+        ds.SOPClassUID = ssopuids.RTStructureSetStorage
+        ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
+        ds.Modality = 'RS'
+        ds.Manufacturer = 'P3TK for PPlan'
+        ds.Station = 'P3TK for PPlan'
+
+        refd_study = Dataset()
+        ds.ReferencedStudySequence.append(refd_study)
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 
@@ -185,3 +221,4 @@ if __name__ == '__main__':
     print('Start creating DICOM Files ...')
     pfDicom = PFDicom(prjpath+'examples/Patient_6204')
     pfDicom.createDicomCT()
+    print('DICOM ImageSet created.')
