@@ -30,8 +30,8 @@ class PFImgSetHeader(BaseModel):
     X_offset: Optional[float]
     Y_offset: Optional[float]
     dataset_modified = 0
-    study_id: Optional[int]
-    exam_id: Optional[int]
+    study_id = ''
+    exam_id = ''
     patient_id = ''
     modality = ''
 
