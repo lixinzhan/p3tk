@@ -19,7 +19,7 @@ class PFImageSetInfo(BaseModel):
     FileName = ''
 
 def readImageSetInfo(pfpath, imgsetid):
-    fname = '%s/Plan_%s/plan.ImageSet' % (pfpath, imgsetid)
+    fname = '%s/ImageSet_%s.ImageSet' % (pfpath, imgsetid)
     pdict = readPFile(fname, 'plan.ImageSet', 'dict')
     pfObj = PFImageSetInfo(**pdict)
     return pfObj

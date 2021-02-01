@@ -47,7 +47,7 @@ class PFDicom():
         for id in range(self.NumberOfImageSets):
             self.ImageSetIDs.append(self.Patient.ImageSetList.ImageSet[id].ImageSetID)
         self.PlanIDs = []
-        for id in range(self.PlanIDs):
+        for id in range(self.NumberOfPlans):
             self.PlanIDs.append(self.Patient.PlanList.Plan[id].PlanID)
 
         # dicom preamble and prefix
@@ -142,7 +142,7 @@ class PFDicom():
             ds.ContentDate = date_scan
             ds.InstanceCreationDate = date_scan
 
-            ds.StudyID = str(imgset_header.study_id)
+            ds.StudyID = imgset_header.study_id
             ds.SeriesNumber = ''
             ds.AcquisitionNumber = ''
             ds.InstanceNumber = ''
@@ -248,5 +248,5 @@ if __name__ == '__main__':
 
     print('Start creating DICOM Files ...')
     pfDicom = PFDicom(prjpath+'examples/Patient_6204')
-    pfDicom.createDicomCT()
+    pfDicom.createDicomCT(pfDicom.ImageSetIDs[0])
     print('DICOM ImageSet created.')
