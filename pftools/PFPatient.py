@@ -6,6 +6,11 @@ from pydantic import BaseModel
 import logging
 from pftools.readPFile import readPFile
 
+class _ObjectVersion(BaseModel):
+      CreateTimeStamp = ''
+      WriteTimeStamp = ''
+      LastModifiedTimeStamp = ''
+
 class _ImageSet(BaseModel):
     ImageSetID: int
     ImageName = ''
@@ -23,6 +28,10 @@ class _Plan(BaseModel):
     PlanName = ''
     PrimaryCTImageSetID = -1
     PrimaryImageType = ''
+    ToolType = ''
+    PinnacleVersionDescription = ''
+    IsNewPlanPrefix: Optional[int]
+    ObjectVersion: Optional[_ObjectVersion] = None
 
 class _PlanList(BaseModel):
     Plan: List[_Plan] = None
@@ -39,6 +48,7 @@ class PFPatient(BaseModel):
     DateOfBirth = ''
     ImageSetList: Optional[_ImageSetList] = None
     PlanList: Optional[_PlanList] = None
+    ObjectVersion: Optional[_ObjectVersion] = None
 
 def readPatient(pfpath):
     fname = '%s/Patient' % pfpath
@@ -65,3 +75,5 @@ if __name__ == '__main__':
     print(pfPatient.ImageSetList.ImageSet[0].NumberOfImages)
     print(pfPatient.ImageSetList.ImageSet[0].ScanTimeFromScanner)
     print(pfPatient.PlanList.Plan[1].PlanName)
+    print(pfPatient.PlanList.Plan[0].ObjectVersion.WriteTimeStamp)
+    print(pfPatient.ObjectVersion.CreateTimeStamp)
