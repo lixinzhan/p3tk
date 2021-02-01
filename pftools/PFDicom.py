@@ -10,6 +10,7 @@ import pftools.common_dcm_settings as dcmcommon
 from pftools.PFPatient import readPatient
 from pftools.PFImgSetHeader import readImageSetHeader
 from pftools.PFImgInfo import readImageInfo
+from pftools.PFImgSetInfo import readImageSetInfo
 from pftools.PFPlanInfo import readPlanInfo
 from pftools.PFPlanPatientSetup import readPlanPatientSetup
 from pftools.PFPlanPoints import readPlanPoints
@@ -40,6 +41,15 @@ class PFDicom():
         if not os.path.exists(self.OutPath):
             os.makedirs(os.path.dirname(self.OutPath), exist_ok=True)
 
+        self.NumberOfImageSets = len(self.Patient.ImageSetList.ImageSet)
+        self.NumberOfPlans = len(self.Patient.PlanList.Plan)
+        self.ImageSetIDs = []
+        for id in range(self.NumberOfImageSets):
+            self.ImageSetIDs.append(self.Patient.ImageSetList.ImageSet[id].ImageSetID)
+        self.PlanIDs = []
+        for id in range(self.PlanIDs):
+            self.PlanIDs.append(self.Patient.PlanList.Plan[id].PlanID)
+
         # dicom preamble and prefix
         self.Preamble = b'0' * 128
         self.Prefix = 'DICM'
@@ -58,23 +68,21 @@ class PFDicom():
             ds.PrimaryCTImageSetID = ptplaninfo.PrimaryCTImageSetID
             ds.StudyID = str(self.Patient.ImageSetList.ImageSet[ds.PrimaryCTImageSetID].StudyID)
 
-    def createDicomCT(self):
-        logging.info('Setting file meta information ...')
-        for imgSet in self.Patient.ImageSetList.ImageSet:
-            ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgSet.ImageSetID)
-            if os.path.exists(ctpath):
-                logging.info('Existing DICOM ImageSet. Copy to destination ...')
-                for ctfile in os.listdir(ctpath):
-                    ds_ct = pydicom.dcmread(ctpath+ctfile)
-                    instance_uid = ds_ct.SOPInstanceUID
-                    fsrc = ctpath+ctfile
-                    fdst = '%s/CT.%s.dcm' % (self.OutPath, instance_uid)
-                    shutil.copy2(fsrc, fdst)
-                logging.info('ImageSet copy done.')
-            else:
-                logging.info('No existing DICOM ImageSet. Generating ...')
-                self._createCTfromData(imgSet.ImageSetID)
-                logging.info('DICOM ImageSet generated.')
+    def createDicomCT(self, imgsetid) -> None:
+        ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgsetid)
+        if os.path.exists(ctpath):
+            logging.info('Existing DICOM ImageSet_%s. Copy to destination ...' % imgsetid)
+            for ctfile in os.listdir(ctpath):
+                ds_ct = pydicom.dcmread(ctpath+ctfile)
+                instance_uid = ds_ct.SOPInstanceUID
+                fsrc = ctpath+ctfile
+                fdst = '%s/CT.%s.dcm' % (self.OutPath, instance_uid)
+                shutil.copy2(fsrc, fdst)
+            logging.info('ImageSet copy done.')
+        else:
+            logging.info('No existing DICOM ImageSet_%s. Generating ...' % imgsetid)
+            self._createCTfromData(imgsetid)
+            logging.info('DICOM ImageSet generated.')
 
     def _createCTfromData(self, imgsetid) -> bool:
         datafile = '%s/ImageSet_%s.img' % (self.PFPath, imgsetid)
@@ -84,8 +92,8 @@ class PFDicom():
             return False
         
         imgset_header = readImageSetHeader(self.PFPath, imgsetid) # self.PFBackup.ImageSet[imgsetid].Header
-        imgset_info = self.Patient.ImageSetList.ImageSet[imgsetid]
-        img_info = readImageInfo(self.PFPath, imgsetid).ImageInfo   # self.PFBackup.ImageSet[imgsetid].ImageInfoList.ImageInfo
+        imgset_info = readImageSetInfo(self.PFPath, imgsetid)     # self.Patient.ImageSetList.ImageSet[imgsetid]
+        img_info = readImageInfo(self.PFPath, imgsetid).ImageInfo # self.PFBackup.ImageSet[imgsetid].ImageInfoList.ImageInfo
 
         bitpix = imgset_header.bitpix
         if bitpix == 16: dtype = np.int16
