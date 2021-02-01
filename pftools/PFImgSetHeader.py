@@ -29,11 +29,17 @@ class PFImgSetHeader(BaseModel):
     couch_height: Optional[float]
     X_offset: Optional[float]
     Y_offset: Optional[float]
-    dataset_modified = 0;
+    dataset_modified = 0
     study_id: Optional[int]
     exam_id: Optional[int]
     patient_id = ''
     modality = ''
+
+def readImageSetHeader(pfpath, imgsetid=0):
+    fname = '%s/ImageSet_%s.header' % (pfpath, imgsetid)
+    pdict = readPFile(fname, 'ImageSet.header', 'dict')
+    pfObj = PFImgSetHeader(**pdict)
+    return pfObj
 
 
 if __name__ == '__main__':

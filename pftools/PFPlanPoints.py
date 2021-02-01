@@ -20,6 +20,13 @@ class _POI(BaseModel):
 class PFPlanPoints(BaseModel):
     Poi: List[_POI] = None
 
+def readPlanPoints(pfpath, planid=0):
+    fname = '%s/Plan_%s/plan.Points' % (pfpath, planid)
+    pdict = readPFile(fname, 'plan.Points', 'dict')
+    pfObj = PFPlanPoints(**pdict)
+    return pfObj
+
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 

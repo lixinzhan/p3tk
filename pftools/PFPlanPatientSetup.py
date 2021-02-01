@@ -12,6 +12,13 @@ class PFPlanPatientSetup(BaseModel):
     TableMotion = ''
     ProductionLevel: Optional[int]
 
+def readPlanPatientSetup(pfpath, planid=0):
+    fname = '%s/Plan_%s/plan.PatientSetup' % (pfpath, planid)
+    pdict = readPFile(fname, 'plan.PatientSetup', 'dict')
+    pfObj = PFPlanPatientSetup(**pdict)
+    return pfObj
+
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 

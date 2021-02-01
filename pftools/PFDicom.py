@@ -3,9 +3,18 @@ import sys
 import logging
 import datetime
 
-from pftools.PFImgInfo import PFImgInfo
-from pftools.PFBackup import PFBackup
+# from pftools.PFImgInfo import PFImgInfo
+# from pftools.PFBackup import PFBackup
 import pftools.common_dcm_settings as dcmcommon
+
+from pftools.PFPatient import readPatient
+from pftools.PFImgSetHeader import readImageSetHeader
+from pftools.PFImgInfo import readImageInfo
+from pftools.PFPlanInfo import readPlanInfo
+from pftools.PFPlanPatientSetup import readPlanPatientSetup
+from pftools.PFPlanPoints import readPlanPoints
+from pftools.PFPlanROI import readPlanROI
+from pftools.PFPlanTrial import readPlanTrial
 
 import pydicom.uid
 import pydicom.sequence
@@ -19,31 +28,39 @@ import numpy as np
 
 class PFDicom():
     def __init__(self, pfpath, outpath='') -> None :
-        logging.info('Start reading in Pinnacle backup files from folder %s\n' % pfpath)
-        self.PFBackup = PFBackup(pfpath)
-        logging.info('Reading Pinnacle backup files DONE!')
+        logging.info('Start reading in Patient files from folder %s\n' % pfpath)
+        self.Patient = readPatient(pfpath)
 
         # remember the input path and set the output path
         self.PFPath = pfpath
-        self.setOutputLocation(outpath)
+        self.OutPath = outpath
+        if self.OutPath == '':
+            self.OutPath = '%s/%s/' % (os.path.abspath(os.getcwd()), 
+                            self.Patient.MedicalRecordNumber)
+        if not os.path.exists(self.OutPath):
+            os.makedirs(os.path.dirname(self.OutPath), exist_ok=True)
 
         # dicom preamble and prefix
         self.Preamble = b'0' * 128
         self.Prefix = 'DICM'
 
-    def setOutputLocation(self, outpath) -> None :
-        self.OutPath = ''
-        if outpath == '':
-            self.OutPath = '%s/%s/' % (os.path.abspath(os.getcwd()), 
-                            self.PFBackup.Patient.MedicalRecordNumber)
-        else:
-            self.OutPath = outpath
-        if not os.path.exists(self.OutPath):
-            os.makedirs(os.path.dirname(self.OutPath), exist_ok=True)
+    def _setFromPatientInfo(self, ds, planid_imgsetid=0, dst=''):
+        ds.PatientName = '%s^%s^%s' % ( self.Patient.LastName, 
+                                        self.Patient.FirstName, 
+                                        self.Patient.MiddleName)
+        ds.PatientID = self.Patient.MedicalRecordNumber
+        ds.PatientBirthDate = self.Patient.DateOfBirth.replace('_','')
+        ds.PatientSex = self.Patient.Gender[0]
+
+        if dst == 'RS':
+            planid = planid_imgsetid
+            ptplaninfo = self.Patient.PlanList.Plan[planid]
+            ds.PrimaryCTImageSetID = ptplaninfo.PrimaryCTImageSetID
+            ds.StudyID = str(self.Patient.ImageSetList.ImageSet[ds.PrimaryCTImageSetID].StudyID)
 
     def createDicomCT(self):
         logging.info('Setting file meta information ...')
-        for imgSet in self.PFBackup.ImageSet:
+        for imgSet in self.Patient.ImageSetList.ImageSet:
             ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgSet.ImageSetID)
             if os.path.exists(ctpath):
                 logging.info('Existing DICOM ImageSet. Copy to destination ...')
@@ -66,9 +83,9 @@ class PFDicom():
             logging.error('No CT data file found: %s' % datafile)
             return False
         
-        img_header = self.PFBackup.ImageSet[imgsetid].Header
-        imgset_info = self.PFBackup.Patient.ImageSetList.ImageSet[imgsetid]
-        img_info = self.PFBackup.ImageSet[imgsetid].ImageInfoList.ImageInfo
+        img_header = readImageSetHeader(self.PFPath, imgsetid) # self.PFBackup.ImageSet[imgsetid].Header
+        imgset_info = self.Patient.ImageSetList.ImageSet[imgsetid]
+        img_info = readImageInfo(self.PFBackup, imgsetid)   # self.PFBackup.ImageSet[imgsetid].ImageInfoList.ImageInfo
 
         bitpix = self.PFBackup.ImageSet[imgsetid].Header.bitpix
         if bitpix == 16: dtype = np.int16
@@ -127,12 +144,14 @@ class PFDicom():
             ds.SamplesPerPixel = 1
             ds.HighBit = 15
             
-            ds.PatientName = '%s^%s^%s' % (self.PFBackup.Patient.LastName, 
-                                            self.PFBackup.Patient.FirstName, 
-                                            self.PFBackup.Patient.MiddleName)
-            ds.PatientID = self.PFBackup.Patient.MedicalRecordNumber
-            ds.PatientBirthDate = self.PFBackup.Patient.DateOfBirth.replace('_','')
-            ds.PatientSex = self.PFBackup.Patient.Gender[0]
+            _setFromPatientInfo(ds, dst='CT')
+
+            # ds.PatientName = '%s^%s^%s' % (self.PFBackup.Patient.LastName, 
+            #                                 self.PFBackup.Patient.FirstName, 
+            #                                 self.PFBackup.Patient.MiddleName)
+            # ds.PatientID = self.PFBackup.Patient.MedicalRecordNumber
+            # ds.PatientBirthDate = self.PFBackup.Patient.DateOfBirth.replace('_','')
+            # ds.PatientSex = self.PFBackup.Patient.Gender[0]
 
             ds.RescaleIntercept = 0 # '-1024'
             ds.RescaleSlope = '1'
@@ -173,44 +192,47 @@ class PFDicom():
         
 
     def createDicomRS(self):
-        for planinfo in self.PFBackup.Patient.PlanList.Plan:
+        for plan in self.PFBackup.Plan:
             logging.info('Setting file meta information for RS...')
-            planid = planinfo.PlanID
             file_meta = FileMetaDataset()
             file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
             file_meta.MediaStorageSOPClassUID = ssopuids.RTStructureSetStorage
             file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
 
-            self._createDicomRS(self, file_meta, planid)
+            ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
+
+            ds.is_little_endian = True
+            ds.is_implicit_VR = False
+
+            ds.SpecificCharacterSet = 'ISO_IR 100'
+
+            ds.ReferencedStudySequence = pydicom.sequence.Sequence()
+
+            ds.InstanceCreationDate = datetime.time.strftime("%Y%m%d")
+            ds.InstanceCreationTime = datetime.time.strftime("%H%M%S")
+            ds.SOPClassUID = ssopuids.RTStructureSetStorage
+            ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
+            ds.Modality = 'RS'
+            ds.Manufacturer = 'P3TK for PPlan'
+            ds.Station = 'P3TK for PPlan'
+
+            refd_study = Dataset()
+            refd_study.ReferencedSOPClassUID = pydicom.uid.generate_uid()
+            refd_study.ReferencedSOPInstanceUID = pydicom.uid.generate_uid()
+            ds.ReferencedStudySequence.append(refd_study)
+
+            ds.StudyInstanceUID = refd_study.ReferencedSOPInstanceUID
+            ds.SeriesInstanceUID = pydicom.uid.generate_uid()
+
+            ds.StructureSetLabel = plan.PlanInfo.PlanName
+            ds.StructureSetName  = plan.PlanInfo.PlanName
+            ds.RadiationOncologiest = plan.PlanInfo.Physician
+            
+            self._setFromPatientInfo(ds, plan.PlanID)
+
+            ofname = '%s/RS.%s.dcm' % (self.OutPath, file_meta.MediaStorageSOPInstanceUID)
     
-    def _createDicomRS(self, file_meta, planid=0):
-        ofname = '%s/RS.%s.dcm' % (self.OutPath, file_meta.MediaStorageSOPInstanceUID)
-        ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
-        ds.is_little_endian = True
-        ds.is_implicit_VR = False
-
-        ds.SpecificCharacterSet = 'ISO_IR 100'
-
-        ds.PatientName = '%s^%s^%s' % (self.PFBackup.Patient.LastName, 
-                                        self.PFBackup.Patient.FirstName, 
-                                        self.PFBackup.Patient.MiddleName)
-        ds.PatientID = self.PFBackup.Patient.MedicalRecordNumber
-        ds.PatientBirthDate = self.PFBackup.Patient.DateOfBirth.replace('_','')
-        ds.PatientSex = self.PFBackup.Patient.Gender[0]
-
-        ds.ReferencedStudySequence = pydicom.sequence.Sequence()
-
-        ds.InstanceCreationDate = datetime.time.strftime("%Y%m%d")
-        ds.InstanceCreationTime = datetime.time.strftime("%H%M%S")
-        ds.SOPClassUID = ssopuids.RTStructureSetStorage
-        ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
-        ds.Modality = 'RS'
-        ds.Manufacturer = 'P3TK for PPlan'
-        ds.Station = 'P3TK for PPlan'
-
-        refd_study = Dataset()
-        ds.ReferencedStudySequence.append(refd_study)
 
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'

@@ -21,6 +21,13 @@ class _ROI(BaseModel):
 class PFPlanROI(BaseModel):
     roi: List[_ROI] = None
 
+def readPlanROI(pfpath, planid=0):
+    fname = '%s/Plan_%s/plan.roi' % (pfpath, planid)
+    pdict = readPFile(fname, 'plan.roi', 'dict')
+    pfObj = PFPlanROI(**pdict)
+    return pfObj
+
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 
