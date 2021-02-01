@@ -19,6 +19,13 @@ class PFPlanInfo(BaseModel):
     Gender = ''
     DateOfBirth = ''
 
+def readPlanInfo(pfpath, planid=0):
+    fname = '%s/Plan_%s/plan.PlanInfo' % (pfpath, planid)
+    pdict = readPFile(fname, 'plan.PlanInfo', 'dict')
+    pfObj = PFPlanInfo(**pdict)
+    return pfObj
+
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 

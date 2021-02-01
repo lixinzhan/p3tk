@@ -40,6 +40,12 @@ class PFPatient(BaseModel):
     ImageSetList: Optional[_ImageSetList] = None
     PlanList: Optional[_PlanList] = None
 
+def readPatient(pfpath):
+    fname = '%s/Patient' % pfpath
+    pdict = readPFile(fname, 'Patient', 'dict')
+    pfObj = PFPatient(**pdict)
+    return pfObj
+
 
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'

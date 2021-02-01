@@ -21,6 +21,12 @@ class _ImageInfo(BaseModel):
 class PFImgInfo(BaseModel):
     ImageInfo: List[_ImageInfo] = None
 
+def readImageInfo(pfpath, imgsetid=0):
+    fname = '%s/ImageSet_%s.ImageInfo' % (pfpath, imgsetid)
+    pdict = readPFile(fname, 'ImageSet.ImageInfo', 'dict')
+    pfObj = PFImgInfo(**pdict)
+    return pfObj
+
 
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
