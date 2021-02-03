@@ -5,6 +5,7 @@ from typing import (List, Optional)
 from pydantic import BaseModel
 import logging
 from pftools.readPFile import readPFile
+from pftools.PFObjectVersion import _ObjectVersion
 
 class _POI(BaseModel):
     Name: str
@@ -14,8 +15,12 @@ class _POI(BaseModel):
     XRotation: Optional[float]
     YRotation: Optional[float]
     ZRotation: Optional[float]
+    Radius: Optional[float]
+    Color = ''
     CoordSys = ''
     CoordinateFormat = ''
+    ObjectVersion: Optional[_ObjectVersion] = None
+
 
 class PFPlanPoints(BaseModel):
     Poi: List[_POI] = None
