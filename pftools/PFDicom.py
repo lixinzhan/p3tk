@@ -154,6 +154,12 @@ class PFDicom():
         ds.StudyID = self.ImgSetHeader.study_id
 
     def _setSeriesModule(self, ds):
+        # Series Number (0020,0011) is a human readable numeric label, which may be empty 
+        # and is not unique within any defined scope; it is required to have the same value 
+        # for all instances that have the same Series Instance UID (0020,000E) 
+        # (this is true of all attributes for the same "entity"), but there is no requirement 
+        # that it be different for different series (though this is often the case for 
+        # different series in the same study, especially if produced by the same equipment) 
         ds.SeriesDate = self.ScanDate
         ds.SeriesTime = ''
         ds.SeriesInstanceUID = self.SeriesUID
