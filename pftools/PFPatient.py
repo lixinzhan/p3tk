@@ -5,11 +5,7 @@ from typing import (List, Optional)
 from pydantic import BaseModel
 import logging
 from pftools.readPFile import readPFile
-
-class _ObjectVersion(BaseModel):
-      CreateTimeStamp = ''
-      WriteTimeStamp = ''
-      LastModifiedTimeStamp = ''
+from pftools.PFObjectVersion import _ObjectVersion
 
 class _ImageSet(BaseModel):
     ImageSetID: int
