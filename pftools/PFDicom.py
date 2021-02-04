@@ -127,6 +127,9 @@ class PFDicom():
         elif self.DICOMFORMAT == 'RP':
             self.ClassUID = ssopuids.RTPlanStorage
 
+        self.InstanceUID = ''
+
+
         # yyyy-mm-dd to yyyymmdd   
         img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
         self.ScanDate = self.ImgSetHeader.date.replace('-','')
@@ -143,9 +146,12 @@ class PFDicom():
         ds.FrameOfReferenceUID = self.FrameUID
         # ds.PositionReferenceIndicator = 'RF'  # not used, annotation purpose only
 
-    def _setInstanceUID(self, ds, inst_uid):
+    def _setInstanceUID(self, ds, inst_uid=''):
         ds.SOPInstanceUID = inst_uid
-        ds.InstanceCreationDate = self.ScanDate
+        if self.DICOMFORMAT == 'CT':
+            ds.InstanceCreationDate = self.ScanDate
+        elif self.DICOMFORMAT == 'RS' or self.DICOMFORMAT == 'RD':
+            ds.InstanceCreationDate = self.PlanPatientSetup.Observation.WriteTimeStamp[:10].replace('-','')
 
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
@@ -164,12 +170,21 @@ class PFDicom():
         ds.SeriesTime = ''
         ds.SeriesInstanceUID = self.SeriesUID
         ds.SeriesNumber = self.ImgSetHeader.exam_id
-        ds.Modality = self.ImgSetHeader.modality
+        ds.Modality = self.DICOMFORMAT
         ds.PatientPosition = self.ImgSetHeader.patient_position
+            
+
+        ds.Manufacturer = 'P3TK for PPlan'
+        ds.Station = 'P3TK for PPlan'
+
 
     def _setEquipmentModule(self, ds):
-        ds.Manufacturer = self.ImgSetHeader.manufacturer
-        ds.ManufacturerModelName = self.ImgSetHeader.model
+        if self.DICOMFORMAT == 'CT':
+            ds.Manufacturer = self.ImgSetHeader.manufacturer
+            ds.ManufacturerModelName = self.ImgSetHeader.model
+        else:
+            ds.Manufacture = 'P3TK'
+            ds.ManufactureModelName = self.DICOMFORMAT
         ds.InstitutionName = dcmcommon.InstitutionName
         ds.InstitutionAddress = dcmcommon.InstitutionAddress
         ds.StationName = dcmcommon.StationName
@@ -295,25 +310,64 @@ class PFDicom():
 
         return True
         
-    def _setFromPlanPoints(self, ds, planid=0):
-        poi_point = readPlanPoints(self.PFPath, planid)
+    def _getReferencedFrameOfSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        return seq
 
-        count = 0
-        for poi in poi_point.Poi:
-            count += 1
-            roi_contour = Dataset()
-            sset_roi    = Dataset()
-            rt_roi_obs  = Dataset()
-            roi_contour.ReferencedROINumber = count
-            sset_roi.ROINumber = count
-            sset_roi.ROIName = poi.Name
-            roi_contour.ContourSequence = pydicom.sequence.Sequence()
-            sset_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
-            sset_roi.ReferencedFrameofReferencedUID = frameuid
-            roi_contour.ROIDisplayColor = poi.Color
+    def _getPredecessorStructureSetSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        return seq
 
+    def _getStructureSetROISequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        return seq
+
+    def _setStructureSetModule(self, ds):
+        ds.InstanceNumber = 0
+        ds.StructureSetLabel = self.PlanInfo.PlanName
+        ds.StructureSetName  = self.PlanInfo.PlanName
+        ds.StructureSetDate = ''
+        ds.StructureSetTime = ''
+        ds.ReferencedFrameOfReferenceSequence = _getReferencedFromOfSequence(ds)
+        ds.PredecessorStructureSetSequence = _getPredecessorStructureSetSequence(ds)
+        ds.StructureSetROISequence = _getStructureSetROISequence(ds)
+
+    def _getROIContourSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        return seq
+
+    def _setROIContourModule(self, ds):
+        ds.ROIContourSequence = _getROIContourSequence(ds)
+
+    def _getROIObservationsSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        return seq
+
+    def _setROIObservations(self, ds):
+        ds.ROIObservationsSequence = _getROIObservationsSequence(ds)
 
     def createDicomRS(self, planid=0):
+        self.InstanceUID = pydicom.uid.generate_uid()
+        file_meta = FileMetaDataset()
+        file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+        file_meta.MediaStorageSOPClassUID    = self.ClassUID
+        file_meta.MediaStorageSOPInstanceUID = self.InstanceUID
+
+        ofname = '%s/RS.%s.dcm' % (self.OutPath, self.InstanceUID)
+        ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
+
+        self._setSOPCommon(ds)
+        self._setPatientModule(ds)
+        self._setFrameOfReference(ds)
+        self._setStudyModule(ds)
+        self._setSeriesModule(ds)
+        self._setEquipmentModule(ds)
+        self._setStructureSetModule(ds)
+        self._setROIContourModule(ds)
+        self._setROIObservations(ds)
+
+        self._setInstanceUID(ds, self.InstanceUID)
+
         imgsetid = self.PlanImageSetMap[planid]
         img_info = readImageInfo(self.PFPath, imgsetid).ImageInfo
         plan_info = readPlanInfo(self.PFPath, planid)
