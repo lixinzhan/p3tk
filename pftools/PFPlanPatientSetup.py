@@ -5,12 +5,14 @@ from typing import (List, Optional)
 from pydantic import BaseModel
 import logging
 from pftools.readPFile import readPFile
+from pftools.PFObjectVersion import _ObjectVersion
 
 class PFPlanPatientSetup(BaseModel):
     Position = ''
     Orientation = ''
     TableMotion = ''
     ProductionLevel: Optional[int]
+    Observation: Optional[_ObjectVersion] = None
 
 def readPlanPatientSetup(pfpath, planid=0):
     fname = '%s/Plan_%s/plan.PatientSetup' % (pfpath, planid)
