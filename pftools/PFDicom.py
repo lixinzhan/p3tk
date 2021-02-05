@@ -28,11 +28,6 @@ import pydicom._storage_sopclass_uids as ssopuids
 import shutil
 import numpy as np
 
-class DICOMFORMAT():
-    CT = 'CT'
-    RS = 'RS'
-    RD = 'RD'
-
 class PFDicom():
     def __init__(self, pfpath, outpath='') -> None :
         logging.info('Start reading in Patient files from folder %s\n' % pfpath)
@@ -81,7 +76,7 @@ class PFDicom():
         self.PlanROI = None
         self.PlanTrial = None
 
-    def initializeForDicom(self, dst='CT', id=0):
+    def _initializeForDicom(self, dst='CT', id=0):
         self.DICOMFORMAT = dst
         if dst == 'CT':
             self.ImageSetID = id
@@ -151,7 +146,7 @@ class PFDicom():
         if self.DICOMFORMAT == 'CT':
             ds.InstanceCreationDate = self.ScanDate
         elif self.DICOMFORMAT == 'RS' or self.DICOMFORMAT == 'RD':
-            ds.InstanceCreationDate = self.PlanPatientSetup.Observation.WriteTimeStamp[:10].replace('-','')
+            ds.InstanceCreationDate = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[:10].replace('-','')
 
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
@@ -174,17 +169,17 @@ class PFDicom():
         ds.PatientPosition = self.ImgSetHeader.patient_position
             
 
-        ds.Manufacturer = 'P3TK for PPlan'
-        ds.Station = 'P3TK for PPlan'
+        #ds.Manufacturer = 'P3TK for PPlan'
+        #ds.Station = 'P3TK for PPlan'
 
 
     def _setEquipmentModule(self, ds):
         if self.DICOMFORMAT == 'CT':
             ds.Manufacturer = self.ImgSetHeader.manufacturer
             ds.ManufacturerModelName = self.ImgSetHeader.model
-        else:
-            ds.Manufacture = 'P3TK'
-            ds.ManufactureModelName = self.DICOMFORMAT
+        # else:
+        #     ds.Manufacture = 'P3TK'
+        #     ds.ManufactureModelName = self.DICOMFORMAT
         ds.InstitutionName = dcmcommon.InstitutionName
         ds.InstitutionAddress = dcmcommon.InstitutionAddress
         ds.StationName = dcmcommon.StationName
@@ -277,7 +272,7 @@ class PFDicom():
             logging.info('DICOM ImageSet generated.')
 
     def _createCTfromData(self, imgsetid) -> bool:
-        self.initializeForDicom('CT', imgsetid)
+        self._initializeForDicom('CT', imgsetid)
         datafile = '%s/ImageSet_%s.img' % (self.PFPath, imgsetid)
         if not os.path.isfile(datafile):
             print('No CT data file found: %s' % datafile)
@@ -309,44 +304,183 @@ class PFDicom():
             logging.info('CT DICOM file saved: %s' % ofname)
 
         return True
-        
-    def _getReferencedFrameOfSequence(self, ds):
+
+    # OK
+    def _getContourImageSequence(self):
         seq = pydicom.sequence.Sequence()
+        for slice in self.ImageInfo:
+            ds_img = Dataset()
+            ds_img.ReferencedSOPClassUID = self.ClassUID
+            ds_img.ReferencedSOPInstanceUID = slice.InstanceUID
+            seq.append(ds_img)
         return seq
 
-    def _getPredecessorStructureSetSequence(self, ds):
+    # OK
+    def _getRTReferencedSeriesSequence(self):
         seq = pydicom.sequence.Sequence()
+        ds_series = Dataset()
+        ds_series.SeriesInstanceUID = self.SeriesUID
+        ds_series.ContourImageSequence = self._getContourImageSequence()
+        seq.append(ds_series)
         return seq
 
-    def _getStructureSetROISequence(self, ds):
+    # OK
+    def _getRTReferencedStudySquence(self):
         seq = pydicom.sequence.Sequence()
+        ds_refstudy = Dataset()
+        ds_refstudy.ReferencedSOPClassUID = self.ClassUID
+        ds_refstudy.ReferencedSOPInstanceUID = self.StudyInstanceUID
+        ds_refstudy.RTReferencedSeriesSequence = self._getRTReferencedSeriesSequence()
+        seq.append(ds_refstudy)
         return seq
 
+    # OK
+    def _getReferencedFrameOfReferenceSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_refframe = Dataset()
+        ds_refframe.FrameOfReferenceUID = self.FrameUID
+        ds_refframe.RTReferencedStudySequence = self._getRTReferencedStudySquence()
+        seq.append(ds_refframe)
+        return seq
+
+    # Not find in Eclipse RS export. Confirm later.
+    # def _getPredecessorStructureSetSequence(self, ds):
+    #     seq = pydicom.sequence.Sequence()
+    #     ds_predstruct = Datase()
+    #     ds_predstruct.ReferencedSOPClassUID = self.ClassUID
+    #     ds_predstruct.ReferencedSOPInstanceUID = 
+    #     return seq
+
+    # OK
+    def _getStructureSetROISequence(self):
+        seq = pydicom.sequence.Sequence()
+
+        # read from plan.points
+        roi_number = 0
+        for poi in self.PlanPoints.Poi:
+            roi_number += 1
+            ds_roi = Dataset()
+            ds_roi.ROINumber = roi_number
+            ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
+            ds_roi.ROIName = poi.Name
+            ds_roi.ReferencedFrameOfReferenceUID = self.FrameUID
+            seq.append(ds_roi)
+
+        # read from plan.roi with roi_number continue
+        for roi in self.PlanROI.roi:
+            roi_number += 1
+            ds_roi = Dataset()
+            ds_roi.ROINumber = roi_number
+            ds_roi.ROIName = roi.name
+            ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
+            ds_roi.ReferencedFrameOfReferenceUID = self.FrameUID
+            seq.append(ds_roi)
+
+        return seq
+
+    # OK
     def _setStructureSetModule(self, ds):
         ds.InstanceNumber = 0
         ds.StructureSetLabel = self.PlanInfo.PlanName
         ds.StructureSetName  = self.PlanInfo.PlanName
         ds.StructureSetDate = ''
         ds.StructureSetTime = ''
-        ds.ReferencedFrameOfReferenceSequence = _getReferencedFromOfSequence(ds)
-        ds.PredecessorStructureSetSequence = _getPredecessorStructureSetSequence(ds)
-        ds.StructureSetROISequence = _getStructureSetROISequence(ds)
+        ds.ReferencedFrameOfReferenceSequence = self._getReferencedFrameOfReferenceSequence()
+        # ds.PredecessorStructureSetSequence = self._getPredecessorStructureSetSequence(ds)
+        ds.StructureSetROISequence = self._getStructureSetROISequence()
 
-    def _getROIContourSequence(self, ds):
+    def _getContourSequence(self, roi, ctype='POINT'):
         seq = pydicom.sequence.Sequence()
+        if ctype == 'POINT':
+            ds_point = Dataset()
+            ds_point.ContourGeometricType = ctype
+            ds_point.NumberOfContourPoints = 1
+            ds_point.ContourData = [
+                roi.XCoord, roi.YCoord, roi.ZCoord
+            ]
+            ds_point.ContourImageSequence = pydicom.sequence.Sequence()
+            ds_contourimage = Dataset()
+            ds_contourimage.ReferencedSOPClassUID = self.ClassUID
+            ds_contourimage.ReferencedSOPInstanceUID = '' # image slice UID
+            ds_point.ContourImageSequence.append(ds_contourimage)
+            seq.append(ds_point)
+        if ctype == 'CLOSED_PLANAR':
+            roi = self.PlanROI.roi[0]
+            for curve in roi.curve:
+                ds_planar = Dataset()
+                ds_planar.ContourGeometricType = ctype
+                ds_planar.NumberOfContourPoints = curve.num_points
+                ds_planar.ContourData = curve.points
+                ds_planar.ContourImageSequence = pydicom.sequence.Sequence()
+                ds_contourimage = Dataset()
+                ds_contourimage.ReferencedSOPClassUID = self.ClassUID
+                ds_contourimage.ReferencedSOPInstanceUID = ''
+                ds_planar.ContourImageSequence.append(ds_contourimage)
+                
+        return seq
+
+    def _getROIContourSequence(self):
+        from colour import Color
+        seq = pydicom.sequence.Sequence()
+        # POI
+        roi_number = 0
+        for poi in self.PlanPoints.Poi:            
+            roi_number += 1
+            ds_roicontour = Dataset()
+            ds_roicontour.ROIDisplayColor = list(255*Color(poi.Color).rgb)
+            ds_roicontour.ReferencedROINumber = roi_number
+            ds_roicontour.ContourSequence = self._getContourSequence(poi, ctype='POINT')
+            seq.append(ds_roicontour)
+
+        # plan.roi, continue with roi_number
+        for roi in self.PlanROI.roi:
+            roi_number += 1
+            ds_roicontour = Dataset()
+            ds_roicontour.ROIDisplayColor = list(255*Color(roi.color))
+            ds_roicontour.ReferencedROINumber = roi_number
+            ds_roicontour.ContourSequence = self._getContourSequence(roi, ctype='CLOSED_PLANAR')
+            seq.append(ds_roicontour)
         return seq
 
     def _setROIContourModule(self, ds):
-        ds.ROIContourSequence = _getROIContourSequence(ds)
+        ds.ROIContourSequence = self._getROIContourSequence()
 
-    def _getROIObservationsSequence(self, ds):
+
+    def _getRTROIObservationsSequence(self, ds):
         seq = pydicom.sequence.Sequence()
-        return seq
 
-    def _setROIObservations(self, ds):
-        ds.ROIObservationsSequence = _getROIObservationsSequence(ds)
+        # read from plan.points
+        roi_number = 0
+        for poi in self.PlanPoints.Poi:
+            roi_number += 1
+            ds_roi = Dataset()
+            ds_roi.ObservationNumber = roi_number
+            ds_roi.ReferencedROINumber = roi_number
+            ds_roi.ROIObservationLabel = poi.Name
+            ds_roi.RTROIInterpretedType = 'MARKER'
+            ds_roi.ROIInterpreter = ''
+            seq.append(ds_roi)
+
+        # read from plan.roi with roi_number continue
+        for roi in self.PlanROI.roi:
+            roi_number += 1
+            ds_roi = Dataset()
+            ds_roi.ObservationNumber = roi_number
+            ds_roi.ReferencedROINumber = roi_number
+            ds_roi.ROIObservationLabel = roi.name
+            ds_roi.RTROIInterpretedType = 'ORGAN'
+            ds_roi.ROIInterpreter = ''
+            seq.append(ds_roi)
+
+        return seq
+    # OK now
+    def _setRTROIObservationsModule(self, ds):
+        ds.RTROIObservationsSequence = self._getRTROIObservationsSequence(ds)
+
 
     def createDicomRS(self, planid=0):
+        self._initializeForDicom('RS', planid)
+
         self.InstanceUID = pydicom.uid.generate_uid()
         file_meta = FileMetaDataset()
         file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
@@ -364,9 +498,14 @@ class PFDicom():
         self._setEquipmentModule(ds)
         self._setStructureSetModule(ds)
         self._setROIContourModule(ds)
-        self._setROIObservations(ds)
+        self._setRTROIObservationsModule(ds)
 
         self._setInstanceUID(ds, self.InstanceUID)
+
+        pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
+        ds.save_as(ofname)
+        logging.info('RS DICOM file saved: %s' % ofname)
+
 
         imgsetid = self.PlanImageSetMap[planid]
         img_info = readImageInfo(self.PFPath, imgsetid).ImageInfo
@@ -393,22 +532,22 @@ class PFDicom():
         ds.is_implicit_VR = False
         ds.SpecificCharacterSet = 'ISO_IR 100'
 
-        ds.InstanceCreationDate = datetime.time.strftime("%Y%m%d")
-        ds.InstanceCreationTime = datetime.time.strftime("%H%M%S")
+        ds.InstanceCreationDate = datetime.datetime.today().strftime("%Y%m%d")
+        ds.InstanceCreationTime = datetime.datetime.now().strftime("%H%M%S")
         ds.SOPClassUID = ssopuids.RTStructureSetStorage
         ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
         ds.Modality = 'RS'
-        ds.Manufacturer = 'P3TK for PPlan'
-        ds.Station = 'P3TK for PPlan'
+        # ds.Manufacturer = 'P3TK for PPlan'
+        # ds.Station = 'P3TK for PPlan'
 
-        self._setFromPatientInfo(ds, planid)
+        #self._setFromPatientInfo(ds, planid)
 
         ds.StudyInstanceUID = studyinstanceuid
         ds.SeriesInstanceUID = structseriesuid
 
         ds.StructureSetLabel = plan_info.PlanName
         ds.StructureSetName  = plan_info.PlanName
-        ds.RadiationOncologist = plan_info.Physician
+        # ds.RadiationOncologist = plan_info.Physician
 
         # ReferencedStudySequence
         ds.ReferencedStudySequence = pydicom.sequence.Sequence()
@@ -451,5 +590,6 @@ if __name__ == '__main__':
 
     print('Start creating DICOM Files ...')
     pfDicom = PFDicom(prjpath+'examples/Patient_6204')
-    pfDicom.createDicomCT(pfDicom.ImageSetIDs[0])
+    # pfDicom.createDicomCT(pfDicom.ImageSetIDs[0])
+    pfDicom.createDicomRS(pfDicom.PlanIDs[0])
     print('DICOM ImageSet created.')
