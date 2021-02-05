@@ -536,7 +536,11 @@ if __name__ == '__main__':
 
     print('Start creating DICOM Files ...')
     pfDicom = PFDicom(prjpath+'examples/Patient_6204')
-    # pfDicom.createDicomCT(pfDicom.ImageSetIDs[0])
-    # print('DICOM ImageSet created.')
-    pfDicom.createDicomRS(pfDicom.PlanIDs[0])
-    print('DICOM RTStruct created.')
+    
+    for imgset in pfDicom.Patient.ImageSetList.ImageSet:
+        pfDicom.createDicomCT(imgset.ImageSetID)
+        print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
+    
+    for plan in pfDicom.Patient.PlanList.Plan:
+        pfDicom.createDicomRS(plan.PlanID)
+        print('DICOM RTStruct_%s created!' % plan.PlanID)
