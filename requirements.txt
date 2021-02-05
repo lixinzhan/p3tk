@@ -4,3 +4,4 @@ pytest
 pylint
 numpy
 pydantic
+colour

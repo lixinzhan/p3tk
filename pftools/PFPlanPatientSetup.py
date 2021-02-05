@@ -12,7 +12,7 @@ class PFPlanPatientSetup(BaseModel):
     Orientation = ''
     TableMotion = ''
     ProductionLevel: Optional[int]
-    Observation: Optional[_ObjectVersion] = None
+    ObjectVersion: Optional[_ObjectVersion] = None
 
 def readPlanPatientSetup(pfpath, planid=0):
     fname = '%s/Plan_%s/plan.PatientSetup' % (pfpath, planid)

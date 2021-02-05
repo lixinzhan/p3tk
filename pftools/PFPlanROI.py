@@ -15,6 +15,7 @@ class _ROI(BaseModel):
     name: str
     density: Optional[float]
     density_units: Optional[str] = ''
+    color = ''
     num_curve: Optional[int]
     curve: List[_Curve]
 
