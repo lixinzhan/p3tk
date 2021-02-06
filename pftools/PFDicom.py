@@ -266,9 +266,9 @@ class PFDicom():
         if self.DICOMFORMAT == 'CT':
             ds.Manufacturer = self.ImgSetHeader.manufacturer
             ds.ManufacturerModelName = self.ImgSetHeader.model
-        # else:
-        #     ds.Manufacture = 'P3TK'
-        #     ds.ManufactureModelName = self.DICOMFORMAT
+        else:
+            ds.Manufacturer = 'P3TK'
+            # ds.ManufactureModelName = self.DICOMFORMAT
         ds.InstitutionName = dcmcommon.InstitutionName
         ds.InstitutionAddress = dcmcommon.InstitutionAddress
         ds.StationName = dcmcommon.StationName
@@ -372,7 +372,7 @@ class PFDicom():
             file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
             file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID[i] #self.ImageInfo[i].InstanceUID
 
-            ofname = '%s/CT.%s.dcm' % (self.OutPath, self.SOPInstanceUID[i])
+            ofname = '%s/CT_%s.%s.dcm' % (self.OutPath, str(i).zfill(3), self.SOPInstanceUID[i])
             ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
             self._setSOPCommon(ds)
