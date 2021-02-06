@@ -5,6 +5,7 @@ venv/lib64
 venv/pyvenv.cfg
 log/*
 00003030/
+DICOM.create/
 
 __pycache__/
 *.py[cod]

@@ -123,18 +123,16 @@ class PFDicom():
         for i in range(self.ImgSetInfo.NumberOfImages):
             entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
                             str(self.ImageInfo[i].SliceNumber), 'CT']
-            self.CTSOPInstanceUID.append(
-                pydicom.uid.generate_uid(entropy_srcs=entropy_src)
+            self.CTSOPInstanceUID.append(   # last 3 characters are the slice number
+                pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(i+1).zfill(3)
                 )
-        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
-                        str(self.PlanID), 'RS']
-        self.RSSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
-        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
-                        str(self.PlanID), 'RP']
-        self.RPSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
-        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
-                        str(self.PlanID), 'RD']
-        self.RDSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
+        # Padding characters 7 for RS, 8 for RD, 9 for RP, plus planid, at the UID end.
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), 'RS']
+        self.RSSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'7')
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), 'RP']
+        self.RPSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'9')
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), 'RD']
+        self.RDSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'8')
 
         if self.DICOMFORMAT == 'CT':
             self.StorageSOPClassUID = ssopuids.CTImageStorage
@@ -156,13 +154,14 @@ class PFDicom():
         self.RPSOPClassUID = ssopuids.RTPlanStorage
         self.RDSOPClassUID = ssopuids.RTDoseStorage
 
-        self.FrameOfReferenceUID = pydicom.uid.generate_uid()
+        # replace last 3 chars for easy identifying UIDs: 4-Frame, 5-Study, 6-Series
+        self.FrameOfReferenceUID = pydicom.uid.generate_uid()[:-3] + '444'
 
         self.StudySOPClassUID = self.SOPClassUID
-        self.StudySOPInstanceUID = pydicom.uid.generate_uid()
+        self.StudySOPInstanceUID = pydicom.uid.generate_uid()[:-3] + '555'
 
         # self.SeriesSOPClassUID = ssopuids.CTImageStorage
-        self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()
+        self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()[:-3] + '666'
 
         #print('2. StorageSOPClassUID: %s' % self.StorageSOPClassUID)
         #print('DICOMFORMAT: %s and uid %s' % (self.DICOMFORMAT, ssopuids.RTStructureSetStorage))
@@ -224,11 +223,12 @@ class PFDicom():
         elif self.DICOMFORMAT == 'RS' or self.DICOMFORMAT == 'RD':
             ds.InstanceCreationDate = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[:10].replace('-','')
 
-    def _getReferencedStudySequence(self):
-        seq = pydicom.sequence.Sequence()
-        ref_study = Dataset()
-        ref_study.ReferencedSOPClassUID = self.CTSOPClassUID
-        ref_study.ReferencedSOPInstanceUID = self.StudySOPInstanceUID
+    # def _getReferencedStudySequence(self):
+    #     seq = pydicom.sequence.Sequence()
+    #     ref_study = Dataset()
+    #     ref_study.ReferencedSOPClassUID = self.CTSOPClassUID
+    #     ref_study.ReferencedSOPInstanceUID = self.StudySOPInstanceUID
+    #     seq.append(ref_study)
 
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
@@ -237,8 +237,8 @@ class PFDicom():
         ds.StudyID = self.ImgSetHeader.study_id
         ds.AccessionNumber = ''
         ds.ReferringPhysicianName = ''
-        if self.DICOMFORMAT != 'CT':
-            ds.ReferencedStudySequence = self._getReferencedStudySequence()
+        # if self.DICOMFORMAT != 'CT':
+        #     ds.ReferencedStudySequence = self._getReferencedStudySequence()
 
     def _setSeriesModule(self, ds):
         # Series Number (0020,0011) is a human readable numeric label, which may be empty 
@@ -374,7 +374,7 @@ class PFDicom():
             file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
             file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID[i] #self.ImageInfo[i].InstanceUID
 
-            ofname = '%s/CT_%s.%s.dcm' % (self.OutPath, str(i).zfill(3), self.SOPInstanceUID[i])
+            ofname = '%s/CT_%s.%s.dcm' % (self.OutPath, str(i+1).zfill(3), self.SOPInstanceUID[i])
             ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
             self._setSOPCommon(ds)
@@ -480,10 +480,11 @@ class PFDicom():
 
     def _getClosestImageInstanceUID(self, z): # in cm
         # ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
-        uid = self.CTSOPInstanceUID[0]
+        uid = 'unknown'
         for img_info in self.ImageInfo:
             if abs(z - img_info.TablePosition) < 0.02:  # in cm
                 uid = self.CTSOPInstanceUID[img_info.SliceNumber-1]
+                # print('Slice #: %s,  TablePosition: %s, InstanceUID: %s' % (img_info.SliceNumber, img_info.TablePosition, uid))
                 return uid
         return uid
 
@@ -516,6 +517,7 @@ class PFDicom():
                 ds_contourimage = Dataset()
                 ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
                 ds_contourimage.ReferencedSOPInstanceUID = self._getClosestImageInstanceUID(curve.points[2])
+                # print('--> ZCoord: %s' % curve.points[2])
                 ds_planar.ContourImageSequence.append(ds_contourimage)
                 seq.append(ds_planar)
                 
@@ -591,7 +593,7 @@ class PFDicom():
         file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
         file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID
 
-        ofname = '%s/RS.%s.dcm' % (self.OutPath, self.RSSOPInstanceUID)
+        ofname = '%s/RS_%s.%s.dcm' % (self.OutPath, str(planid).zfill(3), self.RSSOPInstanceUID)
         ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
         self._setSOPCommon(ds)
