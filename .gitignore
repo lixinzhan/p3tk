@@ -16,5 +16,8 @@ __pycache__/
 
 *.log
 *.bak
+oo
+ooo
+oooo
 
 !log/README.md

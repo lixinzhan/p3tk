@@ -507,7 +507,6 @@ class PFDicom():
             ds_point.ContourImageSequence.append(ds_contourimage)
             seq.append(ds_point)
         if ctype == 'CLOSED_PLANAR':
-            roi = self.PlanROI.roi[0]
             for curve in roi.curve:
                 ds_planar = Dataset()
                 ds_planar.ContourGeometricType = ctype
@@ -518,6 +517,9 @@ class PFDicom():
                 ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
                 ds_contourimage.ReferencedSOPInstanceUID = self._getClosestImageInstanceUID(curve.points[2])
                 # print('--> ZCoord: %s' % curve.points[2])
+                # print('--> ROI: %s  ContourPoints: %s   DataLength: %s' % (roi.name, ds_planar.NumberOfContourPoints, len(ds_planar.ContourData)))
+                # for i in range(curve.num_points):
+                #     print('%s: %s, %s, %s' % (i, ds_planar.ContourData[i*3], ds_planar.ContourData[i*3+1], ds_planar.ContourData[i*3+2]))
                 ds_planar.ContourImageSequence.append(ds_contourimage)
                 seq.append(ds_planar)
                 
