@@ -7,6 +7,7 @@ log/*
 00003030/
 00002785/
 DICOM.create/
+examples/Patient_4604/ImageSet_0.img
 
 __pycache__/
 *.py[cod]
