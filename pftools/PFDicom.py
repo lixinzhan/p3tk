@@ -4,6 +4,8 @@ import logging
 import datetime
 from typing import List, Sequence
 
+from numpy.core.records import _deprecate_shape_0_as_None
+
 # from pftools.PFImgInfo import PFImgInfo
 # from pftools.PFBackup import PFBackup
 import pftools.common_dcm_settings as dcmcommon
@@ -24,6 +26,7 @@ from pydicom.dataset import Dataset
 from pydicom.dataset import FileDataset
 from pydicom.dataset import FileMetaDataset
 import pydicom._storage_sopclass_uids as ssopuids
+import pydicom._uid_dict as uid_dict
 
 import shutil
 import numpy as np
@@ -55,7 +58,7 @@ class PFDicom():
             self.PlanImageSetMap[planinfo.PlanID] = planinfo.PrimaryCTImageSetID
 
         # dicom preamble and prefix
-        self.Preamble = b'0' * 128
+        self.Preamble = b'\x00' * 128
         self.Prefix = 'DICM'
 
         # set them to -1 to make sure they are initialized
@@ -109,39 +112,94 @@ class PFDicom():
             print('Error: Incorrect DICOM format: %s' % dst)
 
         ## common UIDs
-        self.SeriesUID = self.ImageInfo[0].SeriesUID
-        self.StudyInstanceUID = self.ImageInfo[0].StudyInstanceUID
-        self.FrameUID = self.ImageInfo[0].FrameUID
+        # self.SeriesUID = self.ImageInfo[0].SeriesUID
+        # self.StudyInstanceUID = self.ImageInfo[0].StudyInstanceUID
+        # self.FrameUID = self.ImageInfo[0].FrameUID
+
+        self.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+
+        self.CTSOPInstanceUID = [] #pydicom.uid.generate_uid() # one for each image
+        for i in range(self.ImgSetInfo.NumberOfImages):
+            entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
+                            str(self.ImageInfo[i].SliceNumber), 'CT']
+            self.CTSOPInstanceUID.append(
+                pydicom.uid.generate_uid(entropy_srcs=entropy_src)
+                )
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
+                        str(self.PlanID), 'RS']
+        self.RSSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
+                        str(self.PlanID), 'RP']
+        self.RPSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
+        entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
+                        str(self.PlanID), 'RD']
+        self.RDSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)
 
         if self.DICOMFORMAT == 'CT':
-            self.ClassUID = ssopuids.CTImageStorage
+            self.StorageSOPClassUID = ssopuids.CTImageStorage
+            self.StorageSOPInstanceUID = self.CTSOPInstanceUID
         elif self.DICOMFORMAT == 'RS':
-            self.ClassUID = ssopuids.RTStructureSetStorage
+            self.StorageSOPClassUID = ssopuids.RTStructureSetStorage
+            self.StorageSOPClassUID = self.RSSOPInstanceUID
         elif self.DICOMFORMAT == 'RD':
-            self.ClassUID = ssopuids.RTDoseStorage
+            self.StorageSOPClassUID = ssopuids.RTDoseStorage
+            self.StorageSOPClassUID = self.RDSOPInstanceUID
         elif self.DICOMFORMAT == 'RP':
-            self.ClassUID = ssopuids.RTPlanStorage
+            self.StorageSOPClassUID = ssopuids.RTPlanStorage
+            self.StorageSOPClassUID = self.RPSOPInstanceUID
+        self.SOPClassUID = self.StorageSOPInstanceUID
+        self.SOPInstanceUID = self.StorageSOPInstanceUID
 
-        self.InstanceUID = ''
+        self.CTSOPClassUID = ssopuids.CTImageStorage
+        self.RSSOPClassUID = ssopuids.RTStructureSetStorage
+        self.RPSOPClassUID = ssopuids.RTPlanStorage
+        self.RDSOPClassUID = ssopuids.RTDoseStorage
 
+        self.FrameOfReferenceUID = pydicom.uid.generate_uid()
+
+        self.StudySOPClassUID = self.SOPClassUID
+        self.StudySOPInstanceUID = pydicom.uid.generate_uid()
+
+        # self.SeriesSOPClassUID = ssopuids.CTImageStorage
+        self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()
+
+        self.ClassUID = self.StorageSOPClassUID  # temp
+        self.FrameUID = self.FrameOfReferenceUID # temp
+        self.StudyInstanceUID = self.StorageSOPInstanceUID  # temp
+        # self.SeriesUID = self.SeriesSOPClassUID  # temp
 
         # yyyy-mm-dd to yyyymmdd   
         img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
         self.ScanDate = self.ImgSetHeader.date.replace('-','')
 
+        x0 = self.ImgSetHeader.x_start
+        y0 = self.ImgSetHeader.y_start
+        z0 = self.ImgSetHeader.z_start
+        nx = self.ImgSetHeader.x_dim
+        ny = self.ImgSetHeader.y_dim
+        nz = self.ImgSetHeader.z_dim
+        dx = self.ImgSetHeader.x_pixdim
+        dy = self.ImgSetHeader.y_pixdim
+        dz = self.ImgSetHeader.z_pixdim
+        yc = self.ImgSetHeader.couch_height + dy   # couch height
+        self.Xshift = 0 # x0 + (nx-1)*dx/2.0
+        self.Yshift = y0 - yc + (ny-1)*dy/2.0
+        self.Zshift = 0 # -(z0 + (nz-1)*dz/2.0)
+
     def transCoord(self, clist=[]) -> List:
         trans = []
         for i in range(len(clist)):
             if i%3 == 0: # x
-                trans.append(clist[i]*10.0)
+                xyz = clist[i]
             elif i%3 == 1: # y
-                ystart = self.ImgSetHeader.y_start
-                y_dim = self.ImgSetHeader.y_dim
-                ypixdim = self.ImgSetHeader.y_pixdim
-                y = 2.0*ystart-clist[i]+2.0*(y_dim-1)*ypixdim
-                trans.append(y*10.0)
-            elif i%3 == 2: # z
-                trans.append(-clist[i]*10.0)
+                # ystart = self.ImgSetHeader.y_start
+                # y_dim = self.ImgSetHeader.y_dim
+                # ypixdim = self.ImgSetHeader.y_pixdim
+                # y = 2.0*ystart-clist[i]+2.0*(y_dim-1)*ypixdim
+                xyz = -(clist[i] - self.Yshift)
+            else: # i%3 == 2: # z
+                xyz = -clist[i]
+            trans.append('%6.2f' % (xyz*10.0))
         return trans
 
 
@@ -149,11 +207,10 @@ class PFDicom():
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.is_little_endian = True
         ds.is_implicit_VR = False
-
-        ds.SOPClassUID = self.ClassUID
+        ds.SOPClassUID = self.SOPClassUID
 
     def _setFrameOfReference(self, ds):
-        ds.FrameOfReferenceUID = self.FrameUID
+        ds.FrameOfReferenceUID = self.FrameOfReferenceUID
         # ds.PositionReferenceIndicator = 'RF'  # not used, annotation purpose only
 
     def _setInstanceUID(self, ds, inst_uid=''):
@@ -163,11 +220,19 @@ class PFDicom():
         elif self.DICOMFORMAT == 'RS' or self.DICOMFORMAT == 'RD':
             ds.InstanceCreationDate = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[:10].replace('-','')
 
+    def _getReferencedStudySequence(self):
+        seq = pydicom.sequence.Sequence()
+        ref_study = Dataset()
+        ref_study.ReferencedSOPClassUID = self.CTSOPClassUID
+        ref_study.ReferencedSOPInstanceUID = self.StudyInstanceUID
+
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
         ds.StudyTime = ''
         ds.StudyInstanceUID = self.StudyInstanceUID
         ds.StudyID = self.ImgSetHeader.study_id
+        if self.DICOMFORMAT != 'CT':
+            ds.ReferencedStudySequence = self._getReferencedStudySequence()
 
     def _setSeriesModule(self, ds):
         # Series Number (0020,0011) is a human readable numeric label, which may be empty 
@@ -178,15 +243,20 @@ class PFDicom():
         # different series in the same study, especially if produced by the same equipment) 
         ds.SeriesDate = self.ScanDate
         ds.SeriesTime = ''
-        ds.SeriesInstanceUID = self.SeriesUID
+        ds.SeriesInstanceUID = self.SeriesSOPInstanceUID
         ds.SeriesNumber = self.ImgSetHeader.exam_id
-        ds.Modality = self.DICOMFORMAT
+        if self.DICOMFORMAT == 'CT':
+            ds.Modality = 'CT'
+        elif self.DICOMFORMAT == 'RS':
+            ds.Modality = 'RTSTRUCT'
+        elif self.DICOMFORMAT == 'RP':
+            ds.Modality = 'RTPLAN'
+        elif self.DICOMFORMAT == 'RD':
+            self.Modality = 'RTDOSE'
+        else:
+            ds.Modality = self.DICOMFORMAT
         ds.PatientPosition = self.ImgSetHeader.patient_position
             
-
-        #ds.Manufacturer = 'P3TK for PPlan'
-        #ds.Station = 'P3TK for PPlan'
-
 
     def _setEquipmentModule(self, ds):
         if self.DICOMFORMAT == 'CT':
@@ -229,7 +299,6 @@ class PFDicom():
     def _setImagePlanePixelModule(self, ds, index):
         ds.SliceThickness = self.ImgSetHeader.z_pixdim
 
-        # Couch height considered here. Could be useful for coord trans??
         ds.ImagePositionPatient = [ 
             -10.0*self.ImgSetHeader.x_dim*self.ImgSetHeader.x_pixdim/2,
             -10.0*(self.ImgSetHeader.couch_height+self.ImgSetHeader.y_dim*self.ImgSetHeader.y_pixdim/2),
@@ -240,10 +309,8 @@ class PFDicom():
         else: # if ds.PatientPosition in ['HFS', 'FFS']:
             ds.ImageOrientationPatient = [1.0,0.0,0.0,0.0,1.0,-0.0]
         ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
-        ds.PixelSpacing = [
-            10.0*self.ImgSetHeader.x_pixdim, 
-            10.0*self.ImgSetHeader.y_pixdim
-            ]
+        ds.PixelSpacing = [ 10.0*self.ImgSetHeader.x_pixdim, 
+                            10.0*self.ImgSetHeader.y_pixdim]
 
         ds.Rows = self.ImgSetHeader.x_dim
         ds.Columns = self.ImgSetHeader.y_dim
@@ -271,36 +338,37 @@ class PFDicom():
 
 
     def createDicomCT(self, imgsetid) -> None:
-        ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgsetid)
-        if os.path.exists(ctpath):
-            logging.info('Existing DICOM ImageSet_%s. Copy to destination ...' % imgsetid)
-            for ctfile in os.listdir(ctpath):
-                ds_ct = pydicom.dcmread(ctpath+ctfile)
-                instance_uid = ds_ct.SOPInstanceUID
-                fsrc = ctpath+ctfile
-                fdst = '%s/CT.%s.dcm' % (self.OutPath, instance_uid)
-                shutil.copy2(fsrc, fdst)
-            logging.info('ImageSet copy done.')
-        else:
-            logging.info('No existing DICOM ImageSet_%s. Generating ...' % imgsetid)
-            self._createCTfromData(imgsetid)
-            logging.info('DICOM ImageSet generated.')
+        # ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgsetid)
+        # if os.path.exists(ctpath):
+        #     logging.info('Existing DICOM ImageSet_%s. Copy to destination ...' % imgsetid)
+        #     for ctfile in os.listdir(ctpath):
+        #         ds_ct = pydicom.dcmread(ctpath+ctfile)
+        #         instance_uid = ds_ct.SOPInstanceUID
+        #         fsrc = ctpath+ctfile
+        #         fdst = '%s/CT.%s.dcm' % (self.OutPath, instance_uid)
+        #         shutil.copy2(fsrc, fdst)
+        #     logging.info('ImageSet copy done.')
+        # else:
+        #     logging.info('No existing DICOM ImageSet_%s. Generating ...' % imgsetid)
+        # Initialize for CT DICOM creation.
+        self._initializeForDicom('CT', imgsetid)
+        self._createCTfromData(imgsetid)
+        logging.info('DICOM ImageSet generated.')
 
     def _createCTfromData(self, imgsetid) -> bool:
-        self._initializeForDicom('CT', imgsetid)
         datafile = '%s/ImageSet_%s.img' % (self.PFPath, imgsetid)
         if not os.path.isfile(datafile):
             print('No CT data file found: %s' % datafile)
             logging.error('No CT data file found: %s' % datafile)
             return False
         
-        for i in range(self.ImgSetHeader.z_dim):
+        for i in range(self.ImgSetInfo.NumberOfImages):
             file_meta = FileMetaDataset()
-            file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
-            file_meta.MediaStorageSOPClassUID    = self.ClassUID
-            file_meta.MediaStorageSOPInstanceUID = self.ImageInfo[i].InstanceUID
+            file_meta.TransferSyntaxUID = self.TransferSyntaxUID
+            file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
+            file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID[i] #self.ImageInfo[i].InstanceUID
 
-            ofname = '%s/CT.%s.dcm' % (self.OutPath, self.ImageInfo[i].InstanceUID)
+            ofname = '%s/CT.%s.dcm' % (self.OutPath, self.SOPInstanceUID[i])
             ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
             self._setSOPCommon(ds)
@@ -312,10 +380,10 @@ class PFDicom():
             self._setVOILUTModule(ds)
             self._setGeneralCTImageModule(ds)
             self._setImagePlanePixelModule(ds, i)
-            self._setInstanceUID(ds, self.ImageInfo[i].InstanceUID)
+            self._setInstanceUID(ds, self.CTSOPInstanceUID[i])
 
             pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
-            ds.save_as(ofname)
+            ds.save_as(ofname, write_like_original=False)
             logging.info('CT DICOM file saved: %s' % ofname)
 
         return True
@@ -323,10 +391,10 @@ class PFDicom():
     # OK
     def _getContourImageSequence(self):
         seq = pydicom.sequence.Sequence()
-        for slice in self.ImageInfo:
+        for i in range(self.ImgSetInfo.NumberOfImages):
             ds_img = Dataset()
-            ds_img.ReferencedSOPClassUID = self.ClassUID
-            ds_img.ReferencedSOPInstanceUID = slice.InstanceUID
+            ds_img.ReferencedSOPClassUID = self.CTSOPClassUID
+            ds_img.ReferencedSOPInstanceUID = self.CTSOPInstanceUID[i]
             seq.append(ds_img)
         return seq
 
@@ -334,7 +402,7 @@ class PFDicom():
     def _getRTReferencedSeriesSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_series = Dataset()
-        ds_series.SeriesInstanceUID = self.SeriesUID
+        ds_series.SeriesInstanceUID = self.SeriesSOPInstanceUID
         ds_series.ContourImageSequence = self._getContourImageSequence()
         seq.append(ds_series)
         return seq
@@ -343,7 +411,7 @@ class PFDicom():
     def _getRTReferencedStudySquence(self):
         seq = pydicom.sequence.Sequence()
         ds_refstudy = Dataset()
-        ds_refstudy.ReferencedSOPClassUID = self.ClassUID
+        ds_refstudy.ReferencedSOPClassUID = self.StudySOPClassUID
         ds_refstudy.ReferencedSOPInstanceUID = self.StudyInstanceUID
         ds_refstudy.RTReferencedSeriesSequence = self._getRTReferencedSeriesSequence()
         seq.append(ds_refstudy)
@@ -353,7 +421,7 @@ class PFDicom():
     def _getReferencedFrameOfReferenceSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_refframe = Dataset()
-        ds_refframe.FrameOfReferenceUID = self.FrameUID
+        ds_refframe.FrameOfReferenceUID = self.FrameOfReferenceUID
         ds_refframe.RTReferencedStudySequence = self._getRTReferencedStudySquence()
         seq.append(ds_refframe)
         return seq
@@ -378,7 +446,7 @@ class PFDicom():
             ds_roi.ROINumber = roi_number
             ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
             ds_roi.ROIName = poi.Name
-            ds_roi.ReferencedFrameOfReferenceUID = self.FrameUID
+            ds_roi.ReferencedFrameOfReferenceUID = self.FrameOfReferenceUID
             seq.append(ds_roi)
 
         # read from plan.roi with roi_number continue
@@ -388,7 +456,7 @@ class PFDicom():
             ds_roi.ROINumber = roi_number
             ds_roi.ROIName = roi.name
             ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
-            ds_roi.ReferencedFrameOfReferenceUID = self.FrameUID
+            ds_roi.ReferencedFrameOfReferenceUID = self.FrameOfReferenceUID
             seq.append(ds_roi)
 
         return seq
@@ -397,12 +465,21 @@ class PFDicom():
     def _setStructureSetModule(self, ds):
         ds.InstanceNumber = 0
         ds.StructureSetLabel = self.PlanInfo.PlanName
-        ds.StructureSetName  = self.PlanInfo.PlanName
+        ds.StructureSetName  = 'POIandROI'
         ds.StructureSetDate = ''
         ds.StructureSetTime = ''
         ds.ReferencedFrameOfReferenceSequence = self._getReferencedFrameOfReferenceSequence()
         # ds.PredecessorStructureSetSequence = self._getPredecessorStructureSetSequence(ds)
         ds.StructureSetROISequence = self._getStructureSetROISequence()
+
+    def _getClosestImageInstanceUID(self, z): # in cm
+        # ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
+        uid = self.ImageInfo[0].InstanceUID
+        for img_info in self.ImageInfo:
+            if abs(z - img_info.TablePosition) < 0.02:  # in cm
+                uid = img_info.InstanceUID
+                return uid
+        return uid
 
     # OK
     def _getContourSequence(self, roi, ctype='POINT'):
@@ -411,14 +488,15 @@ class PFDicom():
             ds_point = Dataset()
             ds_point.ContourGeometricType = ctype
             ds_point.NumberOfContourPoints = 1
-            # ds_point.ContourData = [1.0,1.1,1.2]
             ds_point.ContourData = self.transCoord([
                 roi.XCoord, roi.YCoord, roi.ZCoord
             ])
+            # print(roi.XCoord, roi.YCoord, roi.ZCoord)
+            # print(ds_point.ContourData)
             ds_point.ContourImageSequence = pydicom.sequence.Sequence()
             ds_contourimage = Dataset()
-            ds_contourimage.ReferencedSOPClassUID = self.ClassUID
-            ds_contourimage.ReferencedSOPInstanceUID = '' # image slice UID
+            ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
+            ds_contourimage.ReferencedSOPInstanceUID = self._getClosestImageInstanceUID(roi.ZCoord)
             ds_point.ContourImageSequence.append(ds_contourimage)
             seq.append(ds_point)
         if ctype == 'CLOSED_PLANAR':
@@ -430,8 +508,8 @@ class PFDicom():
                 ds_planar.ContourData = self.transCoord(curve.points)
                 ds_planar.ContourImageSequence = pydicom.sequence.Sequence()
                 ds_contourimage = Dataset()
-                ds_contourimage.ReferencedSOPClassUID = self.ClassUID
-                ds_contourimage.ReferencedSOPInstanceUID = ''
+                ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
+                ds_contourimage.ReferencedSOPInstanceUID = self._getClosestImageInstanceUID(curve.points[2])
                 ds_planar.ContourImageSequence.append(ds_contourimage)
                 seq.append(ds_planar)
                 
@@ -493,6 +571,7 @@ class PFDicom():
             seq.append(ds_roi)
 
         return seq
+
     # OK now
     def _setRTROIObservationsModule(self, ds):
         ds.RTROIObservationsSequence = self._getRTROIObservationsSequence(ds)
@@ -501,13 +580,12 @@ class PFDicom():
     def createDicomRS(self, planid=0):
         self._initializeForDicom('RS', planid)
 
-        self.InstanceUID = pydicom.uid.generate_uid()
         file_meta = FileMetaDataset()
-        file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
-        file_meta.MediaStorageSOPClassUID    = self.ClassUID
-        file_meta.MediaStorageSOPInstanceUID = self.InstanceUID
+        file_meta.TransferSyntaxUID = self.TransferSyntaxUID
+        file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
+        file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID
 
-        ofname = '%s/RS.%s.dcm' % (self.OutPath, self.InstanceUID)
+        ofname = '%s/RS.%s.dcm' % (self.OutPath, self.RSSOPInstanceUID)
         ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
 
         self._setSOPCommon(ds)
@@ -519,11 +597,10 @@ class PFDicom():
         self._setStructureSetModule(ds)
         self._setROIContourModule(ds)
         self._setRTROIObservationsModule(ds)
-
-        self._setInstanceUID(ds, self.InstanceUID)
+        self._setInstanceUID(ds, self.RSSOPInstanceUID)
 
         pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
-        ds.save_as(ofname)
+        ds.save_as(ofname, write_like_original=False)
         logging.info('RS DICOM file saved: %s' % ofname)
 
 
