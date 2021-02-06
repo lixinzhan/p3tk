@@ -106,7 +106,7 @@ class PFDicom():
             self.PlanInfo = readPlanInfo(self.PFPath, self.PlanID)
             self.PlanPoints = readPlanPoints(self.PFPath, self.PlanID)
             self.PlanROI = readPlanROI(self.PFPath, self.PlanID)
-            self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
+            # self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
         else:
             logging.error('Incorrect DICOM format: %s' % dst)
             print('Error: Incorrect DICOM format: %s' % dst)
@@ -622,7 +622,8 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
+    pfDicom = PFDicom(prjpath+'examples/Patient_4604')
+    #pfDicom = PFDicom('/home/lzhan/PinnBackup/Institution_48/Mount_0/Patient_4604/')
     
     for imgset in pfDicom.Patient.ImageSetList.ImageSet:
         pfDicom.createDicomCT(imgset.ImageSetID)

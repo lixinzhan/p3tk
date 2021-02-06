@@ -1,0 +1,94 @@
+Poi ={
+  Name = "CT REF";
+  XCoord = -0.0471764;
+  YCoord = -70.5998;
+  ZCoord = -12.6434;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "red";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Off";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v6.2b";
+    CreateVersion = "Pinnacle v6.2b";
+    LoginName = "klee";
+    CreateTimeStamp = "2006-03-01 14:20:14";
+    WriteTimeStamp = "2006-03-09 17:00:58";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "isocentre";
+  XCoord = -12.2466;
+  YCoord = -64.8591;
+  ZCoord = -12.6434;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "green";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v6.2b";
+    CreateVersion = "Pinnacle v6.2b";
+    LoginName = "klee";
+    CreateTimeStamp = "2006-03-01 14:20:32";
+    WriteTimeStamp = "2006-03-09 17:00:58";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "tattoo";
+  XCoord = 1.54298;
+  YCoord = -76.3969;
+  ZCoord = -12.6434;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "blue";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Off";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v6.2b";
+    CreateVersion = "Pinnacle v6.2b";
+    LoginName = "klee";
+    CreateTimeStamp = "2006-03-01 14:20:32";
+    WriteTimeStamp = "2006-03-09 17:00:58";
+    LastModifiedTimeStamp = "";
+  };
+};
+Poi ={
+  Name = "Cal Pt";
+  XCoord = -12.2258;
+  YCoord = -64.8759;
+  ZCoord = -14.4434;
+  XRotation = 0;
+  YRotation = 0;
+  ZRotation = 0;
+  Radius = 1;
+  Color = "yellow";
+  CoordSys = "CT";
+  CoordinateFormat = "%6.2f";
+  Display2d = "Label";
+  Display3d = "Wireframe";
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v6.2b";
+    CreateVersion = "Pinnacle v6.2b";
+    LoginName = "klee";
+    CreateTimeStamp = "2006-03-06 10:14:12";
+    WriteTimeStamp = "2006-03-09 17:00:58";
+    LastModifiedTimeStamp = "";
+  };
+};
+
+/* 2‘ */

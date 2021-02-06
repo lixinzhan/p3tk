@@ -1,0 +1,24 @@
+PatientName = "LAST, IMAGE, ";
+Institution = "Radiation Oncology,GRRCC,Basrur";
+PlanName = "RT BREAST";
+Planner = "kl";
+PatientID = 4604;
+LastName = "LAST";
+FirstName = "IMAGE";
+MiddleName = "";
+MedicalRecordNumber = "00002785";
+EncounterNumber = "";
+Physician = "VB";
+Prescription = "";
+Disease = "";
+Diagnosis = "";
+Comment = "";
+Gender = "Female";
+DateOfBirth = "";
+Physicist = "";
+PlanPath = "Institution_48/Mount_0/Patient_4604/Plan_0";
+TimeStamp = "Wed Apr 19 11:31:19 2006";
+PrimaryImageType = "Images";
+OKForSyntegra = 0;
+
+/* µ’ */
