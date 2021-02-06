@@ -173,7 +173,7 @@ class PFDicom():
 
         # yyyy-mm-dd to yyyymmdd   
         img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
-        self.ScanDate = self.ImgSetHeader.date.replace('-','')
+        self.ScanDate = self.ImgSetHeader.date.split()[0].replace('-','')
 
         x0 = self.ImgSetHeader.x_start
         y0 = self.ImgSetHeader.y_start
@@ -319,7 +319,8 @@ class PFDicom():
             ds.ImageOrientationPatient = [-1.0,0.0,0.0,0.0,-1.0,-0.0]
         else: # if ds.PatientPosition in ['HFS', 'FFS']:
             ds.ImageOrientationPatient = [1.0,0.0,0.0,0.0,1.0,-0.0]
-        ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
+        # ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
+        ds.SliceLocation = -10.0*self.ImageInfo[index].TablePosition
         ds.PixelSpacing = [ 10.0*self.ImgSetHeader.x_pixdim, 
                             10.0*self.ImgSetHeader.y_pixdim]
 
@@ -484,7 +485,6 @@ class PFDicom():
         ds.StructureSetROISequence = self._getStructureSetROISequence()
 
     def _getClosestImageInstanceUID(self, z): # in cm
-        # ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
         uid = 'unknown'
         for img_info in self.ImageInfo:
             if abs(z - img_info.TablePosition) < 0.02:  # in cm

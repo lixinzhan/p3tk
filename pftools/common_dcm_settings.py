@@ -1,6 +1,6 @@
 InstitutionName = 'GRAND RIVER REGIONAL CANCER CENTRE'
 InstitutionAddress = '835 King St W, Kitchener, ON CAN'
-StationName = r'RT'
+StationName = r'RadOnc'
 
 DeviceSeriesNumber = ''
 ProtocolName = ''
