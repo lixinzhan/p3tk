@@ -118,6 +118,7 @@ class PFDicom():
 
         self.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
 
+        # Entropy src based SOPInstanceUID for CT, RS, RP, and RD
         self.CTSOPInstanceUID = [] #pydicom.uid.generate_uid() # one for each image
         for i in range(self.ImgSetInfo.NumberOfImages):
             entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), 
@@ -140,14 +141,14 @@ class PFDicom():
             self.StorageSOPInstanceUID = self.CTSOPInstanceUID
         elif self.DICOMFORMAT == 'RS':
             self.StorageSOPClassUID = ssopuids.RTStructureSetStorage
-            self.StorageSOPClassUID = self.RSSOPInstanceUID
+            self.StorageSOPInstanceUID = self.RSSOPInstanceUID
         elif self.DICOMFORMAT == 'RD':
             self.StorageSOPClassUID = ssopuids.RTDoseStorage
-            self.StorageSOPClassUID = self.RDSOPInstanceUID
+            self.StorageSOPInstanceUID = self.RDSOPInstanceUID
         elif self.DICOMFORMAT == 'RP':
             self.StorageSOPClassUID = ssopuids.RTPlanStorage
-            self.StorageSOPClassUID = self.RPSOPInstanceUID
-        self.SOPClassUID = self.StorageSOPInstanceUID
+            self.StorageSOPInstanceUID = self.RPSOPInstanceUID
+        self.SOPClassUID = self.StorageSOPClassUID
         self.SOPInstanceUID = self.StorageSOPInstanceUID
 
         self.CTSOPClassUID = ssopuids.CTImageStorage
@@ -163,9 +164,12 @@ class PFDicom():
         # self.SeriesSOPClassUID = ssopuids.CTImageStorage
         self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()
 
-        self.ClassUID = self.StorageSOPClassUID  # temp
-        self.FrameUID = self.FrameOfReferenceUID # temp
-        self.StudyInstanceUID = self.StorageSOPInstanceUID  # temp
+        #print('2. StorageSOPClassUID: %s' % self.StorageSOPClassUID)
+        #print('DICOMFORMAT: %s and uid %s' % (self.DICOMFORMAT, ssopuids.RTStructureSetStorage))
+
+        # self.ClassUID = self.StorageSOPClassUID  # temp
+        # self.FrameUID = self.FrameOfReferenceUID # temp
+        # self.StudyInstanceUID = self.StorageSOPInstanceUID  # temp
         # self.SeriesUID = self.SeriesSOPClassUID  # temp
 
         # yyyy-mm-dd to yyyymmdd   
@@ -224,12 +228,12 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ref_study = Dataset()
         ref_study.ReferencedSOPClassUID = self.CTSOPClassUID
-        ref_study.ReferencedSOPInstanceUID = self.StudyInstanceUID
+        ref_study.ReferencedSOPInstanceUID = self.StudySOPInstanceUID
 
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
         ds.StudyTime = ''
-        ds.StudyInstanceUID = self.StudyInstanceUID
+        ds.StudyInstanceUID = self.StudySOPInstanceUID
         ds.StudyID = self.ImgSetHeader.study_id
         if self.DICOMFORMAT != 'CT':
             ds.ReferencedStudySequence = self._getReferencedStudySequence()
@@ -412,7 +416,7 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ds_refstudy = Dataset()
         ds_refstudy.ReferencedSOPClassUID = self.StudySOPClassUID
-        ds_refstudy.ReferencedSOPInstanceUID = self.StudyInstanceUID
+        ds_refstudy.ReferencedSOPInstanceUID = self.StudySOPInstanceUID
         ds_refstudy.RTReferencedSeriesSequence = self._getRTReferencedSeriesSequence()
         seq.append(ds_refstudy)
         return seq
@@ -474,10 +478,10 @@ class PFDicom():
 
     def _getClosestImageInstanceUID(self, z): # in cm
         # ds.SliceLocation = 10.0*self.ImageInfo[index].CouchPos
-        uid = self.ImageInfo[0].InstanceUID
+        uid = self.CTSOPInstanceUID[0]
         for img_info in self.ImageInfo:
             if abs(z - img_info.TablePosition) < 0.02:  # in cm
-                uid = img_info.InstanceUID
+                uid = self.CTSOPInstanceUID[img_info.SliceNumber-1]
                 return uid
         return uid
 
