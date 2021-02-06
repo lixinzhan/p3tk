@@ -1,0 +1,62 @@
+NormalizationMode .ShortName = "PctPOI";
+LineList ={
+  IsodoseLine ={
+    IsoValue = 100;
+    Color = "red";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 95;
+    Color = "yellow";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 90;
+    Color = "purple";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 80;
+    Color = "skyblue";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 70;
+    Color = "orange";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 50;
+    Color = "forest";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+  IsodoseLine ={
+    IsoValue = 30;
+    Color = "slateblue";
+    LineWidth = 1;
+    Display2dOn = 1;
+    Display3dMode = "Off";
+  };
+};
+ObjectVersion ={
+  WriteVersion = "Pinnacle v6.2b";
+  CreateVersion = "Pinnacle v6.2b";
+  LoginName = "lwunder";
+  CreateTimeStamp = "2006-03-01 14:19:27";
+  WriteTimeStamp = "2006-04-10 16:21:46";
+  LastModifiedTimeStamp = "";
+};
+
+/* T¸ */

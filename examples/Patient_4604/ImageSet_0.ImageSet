@@ -1,0 +1,10 @@
+ImageSetID = 0;
+PatientID = 0;
+ImageName = "";
+NameFromScanner = "LAST^IMAGE^";
+ExamID = "";
+NumberOfImages = 121;
+ScanTimeFromScanner = "2006-03-01 14:11:49";
+FileName = "";
+
+/* ê! */

@@ -1,0 +1,1198 @@
+Trial ={
+  Name = "Rt Breast";
+  CtToDensityName = "CT_to_RED Nov 2003";
+  CtToDensityVersion = "2003-11-11 13:50:09";
+  DoseGrid .VoxelSize .X = 0.4;
+  DoseGrid .VoxelSize .Y = 0.4;
+  DoseGrid .VoxelSize .Z = 0.3;
+  DoseGrid .Dimension .X = 45;
+  DoseGrid .Dimension .Y = 48;
+  DoseGrid .Dimension .Z = 40;
+  DoseGrid .Origin .X = -23.831;
+  DoseGrid .Origin .Y = -72.4677;
+  DoseGrid .Origin .Z = -22.0166;
+  DoseGrid .DisplayAsSecondary = 0;
+  DoseGrid .Display2d = 1;
+  DoseStartSlice = 59;
+  DoseEndSlice = 59;
+  DensityTopZPadding = 0;
+  DensityBottomZPadding = 0;
+  HighResZSpacingForVariable = 0.2;
+  FluenceGridResolution = 0.4;
+  FluenceGridMatchesDoseGrid = 1;
+  OutsidePatientIsCtNumber = 0;
+  OutsidePatientAirThreshold = 0.6;
+  SourceToFilmDistance = 140;
+  ScreenToPrinterZoomFactor = 1.33333;
+  PrescriptionList ={
+    Prescription ={
+      Name = "E Bst Rt Br";
+      RequestedMonitorUnitsPerFraction = 0;
+      PrescriptionDose = 1600;
+      PrescriptionPercent = 95;
+      NumberOfFractions = 8;
+      PrescriptionPoint = "e Cal";
+      Method = "Prescribe";
+      NormalizationMethod = "Point Dose";
+      PrescriptionPeriod = "Overall";
+      WeightsProportionalTo = "Point Dose";
+      Color = "red";
+    };
+  };
+  RemoveCouchFromScan = 1;
+  CouchRemovalYCoordinate = -93.0939;
+  Display2dCouchPosition = 0;
+  Display3dCouchPosition = 0;
+  CouchDisplayColor = "red";
+  RecomputeDensity = 1;
+  PhysicsPlan = 0;
+  BeamList ={
+    Beam ={
+      Name = "MED RT BR";
+      IsocenterName = "e Iso";
+      PrescriptionName = "E Bst Rt Br";
+      UsePoiForPrescriptionPoint = 1;
+      PrescriptionPointName = "e Cal";
+      PrescriptionPointDepth = 5;
+      PrescriptionPointXOffset = 0;
+      PrescriptionPointYOffset = 0;
+      SpecifyDosePerMuAtPrescriptionPoint = 0;
+      DosePerMuAtPrescriptionPoint = 1;
+      MachineNameAndVersion = "EX: 2005-10-16 10:55:47";
+      Modality = "Electrons";
+      MachineEnergyName = "16e";
+      DesiredLocalizerName = "Laser";
+      ActualLocalizerName = "Laser";
+      DisplayLaserMotion = 0;
+      SetBeamType = "Static";
+      CPManager ={
+        IsGantryStartStopLocked = 1;
+        IsCouchStartStopLocked = 1;
+        IsCollimatorStartStopLocked = 1;
+        IsLeftRightIndependent = 1;
+        IsTopBottomIndependent = 1;
+        NumberOfControlPoints = 1;
+        ControlPointList ={
+          #0 ={
+            Gantry = 320;
+            Couch = 0;
+            Collimator = 0;
+            WedgeContext ={
+              WedgeName = "No wedge";
+              Orientation = "NoWedge";
+              OffsetOrigin = "Patient Surface";
+              OffsetDistance = -2.5;
+              Angle = "No Wedge";
+              MinDeliverableMU = 0;
+              MaxDeliverableMU = 1e+30;
+            };
+            LeftJawPosition = 5;
+            RightJawPosition = 5;
+            TopJawPosition = 5;
+            BottomJawPosition = 5;
+            ModifierList ={
+              BeamModifier ={
+                Name = "BeamModifier_2";
+                FixToCollimator = 1;
+                AutoBlock = 0;
+                StructureToBlock = "Manual";
+                Margin = 0;
+                InsideMode = "Expose";
+                OutsideMode = "As Is";
+                ContourList ={
+                  CurvePainter ={
+                    Curve ={
+                      RawData ={
+                        NumberOfDimensions = 2;
+                        NumberOfPoints = 6;
+                        Points[] ={
+                          -3.20063,1.54732,
+                          -2.2256,2.2256,
+                          3.62455,2.2256,
+                          4.21805,1.42015,
+                          -3.32781,1.42015,
+                          -2.98867,1.75929
+                        };
+                      };
+                      LabelList ={
+                        #0 ={
+                          String = "X";
+                        };
+                        #1 ={
+                          String = "Y";
+                        };
+                      };
+                      RowLabelList ={
+                      };
+                      LabelFormatList ={
+                        #0 ={
+                          String = "%6.2f";
+                        };
+                        #1 ={
+                          String = "%6.2f";
+                        };
+                      };
+                    };
+                    Color = "";
+                    SliceCoordinate = 0;
+                    Orientation = "Transverse";
+                  };
+                };
+              };
+              BeamModifier ={
+                Name = "BeamModifier_1";
+                FixToCollimator = 0;
+                AutoBlock = 1;
+                StructureToBlock = "Boost";
+                Margin = 1;
+                InsideMode = "Expose";
+                OutsideMode = "Block";
+                ContourList ={
+                };
+              };
+            };
+            MLCLeafPositions ={
+              RawData ={
+                NumberOfDimensions = 2;
+                NumberOfPoints = 60;
+                Points[] ={
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20,
+                  20,20
+                };
+              };
+              LabelList ={
+                #0 ={
+                  String = "X1 (X1)";
+                };
+                #1 ={
+                  String = "X2 (X2)";
+                };
+              };
+              RowLabelList ={
+                #0 ={
+                  String = "  1. Y = -19.70 cm";
+                };
+                #1 ={
+                  String = "  2. Y = -18.50 cm";
+                };
+                #2 ={
+                  String = "  3. Y = -17.50 cm";
+                };
+                #3 ={
+                  String = "  4. Y = -16.50 cm";
+                };
+                #4 ={
+                  String = "  5. Y = -15.50 cm";
+                };
+                #5 ={
+                  String = "  6. Y = -14.50 cm";
+                };
+                #6 ={
+                  String = "  7. Y = -13.50 cm";
+                };
+                #7 ={
+                  String = "  8. Y = -12.50 cm";
+                };
+                #8 ={
+                  String = "  9. Y = -11.50 cm";
+                };
+                #9 ={
+                  String = " 10. Y = -10.50 cm";
+                };
+                #10 ={
+                  String = " 11. Y = -9.75 cm";
+                };
+                #11 ={
+                  String = " 12. Y = -9.25 cm";
+                };
+                #12 ={
+                  String = " 13. Y = -8.75 cm";
+                };
+                #13 ={
+                  String = " 14. Y = -8.25 cm";
+                };
+                #14 ={
+                  String = " 15. Y = -7.75 cm";
+                };
+                #15 ={
+                  String = " 16. Y = -7.25 cm";
+                };
+                #16 ={
+                  String = " 17. Y = -6.75 cm";
+                };
+                #17 ={
+                  String = " 18. Y = -6.25 cm";
+                };
+                #18 ={
+                  String = " 19. Y = -5.75 cm";
+                };
+                #19 ={
+                  String = " 20. Y = -5.25 cm";
+                };
+                #20 ={
+                  String = " 21. Y = -4.75 cm";
+                };
+                #21 ={
+                  String = " 22. Y = -4.25 cm";
+                };
+                #22 ={
+                  String = " 23. Y = -3.75 cm";
+                };
+                #23 ={
+                  String = " 24. Y = -3.25 cm";
+                };
+                #24 ={
+                  String = " 25. Y = -2.75 cm";
+                };
+                #25 ={
+                  String = " 26. Y = -2.25 cm";
+                };
+                #26 ={
+                  String = " 27. Y = -1.75 cm";
+                };
+                #27 ={
+                  String = " 28. Y = -1.25 cm";
+                };
+                #28 ={
+                  String = " 29. Y = -0.75 cm";
+                };
+                #29 ={
+                  String = " 30. Y = -0.25 cm";
+                };
+                #30 ={
+                  String = " 31. Y =  0.25 cm";
+                };
+                #31 ={
+                  String = " 32. Y =  0.75 cm";
+                };
+                #32 ={
+                  String = " 33. Y =  1.25 cm";
+                };
+                #33 ={
+                  String = " 34. Y =  1.75 cm";
+                };
+                #34 ={
+                  String = " 35. Y =  2.25 cm";
+                };
+                #35 ={
+                  String = " 36. Y =  2.75 cm";
+                };
+                #36 ={
+                  String = " 37. Y =  3.25 cm";
+                };
+                #37 ={
+                  String = " 38. Y =  3.75 cm";
+                };
+                #38 ={
+                  String = " 39. Y =  4.25 cm";
+                };
+                #39 ={
+                  String = " 40. Y =  4.75 cm";
+                };
+                #40 ={
+                  String = " 41. Y =  5.25 cm";
+                };
+                #41 ={
+                  String = " 42. Y =  5.75 cm";
+                };
+                #42 ={
+                  String = " 43. Y =  6.25 cm";
+                };
+                #43 ={
+                  String = " 44. Y =  6.75 cm";
+                };
+                #44 ={
+                  String = " 45. Y =  7.25 cm";
+                };
+                #45 ={
+                  String = " 46. Y =  7.75 cm";
+                };
+                #46 ={
+                  String = " 47. Y =  8.25 cm";
+                };
+                #47 ={
+                  String = " 48. Y =  8.75 cm";
+                };
+                #48 ={
+                  String = " 49. Y =  9.25 cm";
+                };
+                #49 ={
+                  String = " 50. Y =  9.75 cm";
+                };
+                #50 ={
+                  String = " 51. Y = 10.50 cm";
+                };
+                #51 ={
+                  String = " 52. Y = 11.50 cm";
+                };
+                #52 ={
+                  String = " 53. Y = 12.50 cm";
+                };
+                #53 ={
+                  String = " 54. Y = 13.50 cm";
+                };
+                #54 ={
+                  String = " 55. Y = 14.50 cm";
+                };
+                #55 ={
+                  String = " 56. Y = 15.50 cm";
+                };
+                #56 ={
+                  String = " 57. Y = 16.50 cm";
+                };
+                #57 ={
+                  String = " 58. Y = 17.50 cm";
+                };
+                #58 ={
+                  String = " 59. Y = 18.50 cm";
+                };
+                #59 ={
+                  String = " 60. Y = 19.70 cm";
+                };
+              };
+              LabelFormatList ={
+                #0 ={
+                  String = "%5.2f";
+                };
+                #1 ={
+                  String = "%5.2f";
+                };
+              };
+            };
+            Weight = 1;
+            WeightLocked = 0;
+            PercentOfArc = 0;
+          };
+        };
+        GantryIsCCW = 0;
+        MLCPushMethod = "Center";
+      };
+      ExtendPastTarget = 10;
+      ExtendBlockPlanePastTarget = -10;
+      ExtendArcPastTarget = 0;
+      BevRotationAngle = 180;
+      BevIsParallel = 0;
+      RotationIndicatorOffset = 10;
+      IMRTFilter = "Compensator";
+      IMRTWedge = "Hard Wedge";
+      IMRTDirection = "Gantry";
+      IMRTParameterType = "None";
+      PhilipsMLCTreatment = "No Export";
+      PhilipsMLCBeamNumber = "No Export";
+      ToshibaMLCPlanNumber = "No Export";
+      ToshibaMLCBeamNumberString = "No Export";
+      UseMLC = 0;
+      ClipMLCDisplay = 1;
+      SolidMLCDisplay = 0;
+      DynamicBlocks = 0;
+      Display2d = 1;
+      Display3d = 1;
+      CircularFieldDiameter = 0;
+      ElectronApplicatorName = "10x10 cone";
+      SSD = 100;
+      AvgSSD = 100;
+      SSDValid = 1;
+      LeftAutoSurroundMargin = 0;
+      RightAutoSurroundMargin = 0;
+      TopAutoSurroundMargin = 0;
+      BottomAutoSurroundMargin = 0;
+      AutoSurroundBlocks = 0;
+      OpenExtraLeafPairs = 0;
+      BlockingMaskPixelSize = 0.05;
+      BlockingMaskCutoffArea = 0.001;
+      BlockAndTrayFactor = 0.051;
+      TrayNumber = "";
+      BlockExportName = "krzewskiI";
+      BlockCutterFormat = "ParScientific";
+      BlockJawOverlap = 1;
+      TrayFactor = 0.95;
+      Bolus ={
+        Type = "No bolus";
+        NumVoxelsSet = 0;
+        PolyReduction = "1/1";
+        Density = 1;
+        Height = 10;
+        BackPlaneDepth = 8;
+        Width = 10;
+        Thickness = 2;
+        DisplacementX = 0;
+        DisplacementY = 0;
+        VoxelDimX = 0;
+        VoxelDimY = 0;
+        VoxelDimZ = 0;
+        VolumeToWorldTransform ={
+          Data ={
+            NumberOfDimensions = 4;
+            NumberOfPoints = 4;
+            Points[] ={
+              1,0,0,0,
+              0,1,0,0,
+              0,0,1,0,
+              0,0,0,1
+            };
+          };
+        };
+        WorldToVolumeTransform ={
+          Data ={
+            NumberOfDimensions = 4;
+            NumberOfPoints = 4;
+            Points[] ={
+              1,0,0,0,
+              0,1,0,0,
+              0,0,1,0,
+              0,0,0,1
+            };
+          };
+        };
+        BinaryVolume ={
+          XDim = 1;
+          YDim = 1;
+          ZDim = 1;
+          XMin = 0;
+          YMin = 0;
+          ZMin = 0;
+          XMax = 0;
+          YMax = 0;
+          ZMax = 0;
+          BinaryData = \XDR:0\;
+        };
+        VolumeValid = 0;
+      };
+      Compensator ={
+        Name = "";
+        ExportName = "";
+        TrayNumber = "";
+        ExportFormat = "Binary";
+        IsValid = 0;
+        GeneratedAutomatically = 0;
+        SourceToCompensatorDistance = 50;
+        ScaleWidthHeight = 0;
+        Width = 5;
+        Height = 5;
+        Resolution = 0.25;
+        DisplayResolution = 0.5;
+        CompensatorHangsDown = 0;
+        IncludePolyBase = 1;
+        MaxIterations = 5;
+        MaxAllowableThickness = 10;
+        RoundData = 0;
+        RoundingValue = 0.001;
+        CutoffHomogeneity = 0.05;
+        StartOptimizationWithCurrent = 0;
+        ActualHomogeneity = 0;
+        OutputFactor = 1;
+        Density = 1;
+        EdgeOfFieldBorder = 0.5;
+        InitialThickness = 0;
+        MillingXScaler = 1;
+        MillingYScaler = 1;
+        MillingZScaler = 1;
+        MillingThickness = 4;
+        PositiveMilled = 0;
+        OptimizeToMinDoseFirstIteration = 1;
+        ResampleUsingLinearInterpolation = 1;
+        FillOutsideMode = "Mean Thickness";
+        FillOutsideThickness = 0;
+        DoseCompMode = "Full 3D Dose";
+        Type = "Thickness";
+        PlaneDepth = 10;
+        ArrayObjectName = "MED RT BR filter.";
+        CenterAtZero = 0;
+        Thickness = \XDR:1\;
+        DoseMin = 0;
+        DoseMax = 0;
+        DoseMean = 0;
+        DoseStdDev = 0;
+      };
+      CompensatorScaleFactor = 0;
+      ODM ={
+        Name = "";
+        ExportName = "";
+        ExportAscii = 0;
+        ExportEffectiveODM = 0;
+        IsValid = 0;
+        EffectiveODMIsValid = 0;
+        SourceToODMDistance = 100;
+        MUForODM = 0;
+        LeftJawPosition = 5;
+        RightJawPosition = 5;
+        TopJawPosition = 5;
+        BottomJawPosition = 5;
+        TransCorrection = "MLC Transmission";
+        GeneratedAutomatically = 0;
+        BeamModified = 1;
+        ODMVolume .Dimension .X = 20;
+        ODMVolume .Dimension .Y = 20;
+        ODMVolume .Start .X = -5;
+        ODMVolume .Start .Y = -5;
+        ODMVolume .VoxelSize .X = 0.5;
+        ODMVolume .VoxelSize .Y = 0.5;
+        ODMData = \XDR:2\;
+      };
+      ObjectVersion ={
+        WriteVersion = "Pinnacle v6.2b";
+        CreateVersion = "Pinnacle v6.2b";
+        LoginName = "lwunder";
+        CreateTimeStamp = "2006-03-01 14:20:32";
+        WriteTimeStamp = "2006-04-10 16:21:46";
+        LastModifiedTimeStamp = "";
+      };
+      ComputationVersion = "Pinnacle v6.2b";
+      DoseEngine ={
+        TypeName = "Electron 3D";
+        ConvolveHomogeneous = 0;
+        FluenceHomogeneous = 0;
+        FlatWaterPhantom = 0;
+        FlatHomogeneous = 0;
+        ElectronHomogeneous = 1;
+        FluenceType = "Ray Trace";
+        LongStepTuningFactor = 2;
+        ShortStepLength = 0.1;
+        NumberOfShortSteps = 20;
+        SplitFluenceFieldSizeCutoff = 0;
+        AzimuthalBinCount = 8;
+        ZenithBinCount = 10;
+        CumKernelRadialBinWidth = 0.005;
+        SiddonCornerCutoff = 1e-07;
+        NrdBinWidth = 0.1;
+        AllowableDoseDiff = 5;
+        HighFluenceCutoff = 20;
+        LowFirstDerivCutoff = 10;
+        LowSecondDerivCutoff = 20;
+        HighFirstDerivCutoff = 5;
+        HighSecondDerivCutoff = 10;
+        AdaptiveLevels = 3;
+        EnergyFlatnessCutoff = 1e-05;
+        EnergyFlatnessMinimumDistance = 5.25;
+        EnergyFlatnessScalingDistance = 10.5;
+        EnergyFlatnessPower = 8;
+        MaxShowers = 1000000;
+        ShowersPerBatch = 100000;
+        UseBatchStatistics = 0;
+        MaxMinutes = 1440;
+        MaxMinutesOfInactivity = 5;
+        AirEnvelopeThickness = 100;
+        ElectronTransportCutoff = 0.2;
+        PhotonTransportCutoff = 0.01;
+        RangeDiscardCutoff = 0;
+        PercentErrorGoal = 2;
+        DoseDensityThreshold = 0.083;
+        DoseNormalizationFactor = 1;
+        StatisticsOutsideRoi = 1;
+        MonteCarloPixelSize = 0.2;
+        PrintCloneFiles = 0;
+        PrintEventFile = 0;
+        PrintTrackFile = 0;
+      };
+      DegreesBetweenSubbeamsForDoseCalc = 5;
+      IrregPointList ={
+      };
+      IrregPrescriptionPointName = "";
+      IrregSpecifyMonitorUnits = 0;
+      IrregPointPrescriptionDose = 0;
+      IrregPointMonitorUnits = 0;
+      IrregPointPrescribeOverall = 0;
+      IrregPointNumberOfFractions = 1;
+      FilmImageList ={
+        FilmImage ={
+          Name = "FilmImage_1";
+          Type = "DRR";
+          SourceToFilmDistance = 100;
+          NormalDRRSpecs ={
+            Energy = 0.03;
+            CtToDensityTable = "New DRR Only";
+            BrightnessFactor = 0.3;
+            UseRenderingLimits = 0;
+            UseThreshold = 0;
+            LowerThreshold = 0;
+            UpperThreshold = 1;
+            LinearImageLoad = 1;
+            ImageWidth = 40;
+            ImagePixels = 256;
+            StepSize = 0.1;
+            RayInterpolationMode = "Smoothest";
+          };
+          FastDRRSpecs ={
+            Energy = 0.03;
+            CtToDensityTable = "New DRR Only";
+            BrightnessFactor = 0.3;
+            UseRenderingLimits = 0;
+            UseThreshold = 0;
+            LowerThreshold = 0;
+            UpperThreshold = 1;
+            LinearImageLoad = 1;
+            ImageWidth = 40;
+            ImagePixels = 128;
+            StepSize = 0.6;
+            RayInterpolationMode = "Coarse";
+          };
+          ApplyBoundingBox = 0;
+          BoundingBox ={
+            Origin ={
+              X = -23.9531;
+              Y = -93.7531;
+              Z = -37.8434;
+            };
+            Size ={
+              X = 48;
+              Y = 48;
+              Z = 36.3;
+            };
+          };
+          Film1Index = 0;
+          Film2Index = 0;
+          Film1Fraction = 0.5;
+          Image .VoxelSize .X = 0.15625;
+          Image .VoxelSize .Y = 0.15625;
+          Image .VoxelSize .Z = 1;
+          Image .Dimension .X = 256;
+          Image .Dimension .Y = 256;
+          Image .Dimension .Z = 1;
+          Image .Origin .X = -19.9219;
+          Image .Origin .Y = -19.9219;
+          Image .Origin .Z = 0;
+          DRRValid = 1;
+          HighQuality = 1;
+          ImageData = \XDR:3\;
+        };
+      };
+      MonitorUnitInfo ={
+        PrescriptionDose = 210.526;
+        SourceToPrescriptionPointDistance = 102.983;
+        TotalTransmissionFraction = 0.95;
+        TransmissionDescription = "(Block Tray)";
+        PrescriptionPointDepth = 2.98267;
+        PrescriptionPointRadDepth = 2.92655;
+        DepthToActualPoint = 2.97691;
+        SSDToActualPoint = 100.006;
+        RadDepthToActualPoint = 2.93502;
+        PrescriptionPointRadDepthValid = 1;
+        PrescriptionPointOffAxisDistance = 0.0245311;
+        UnblockedFieldAreaAtSAD = 100;
+        UnblockedFieldPerimeterAtSAD = 40;
+        BlockedFieldAreaAtSAD = 34.9;
+        IntersectFieldAreaAtSAD = 0;
+        NormalizedDose = 1.06797;
+        OffAxisRatio = 0;
+        CollimatorOutputFactor = 0.996743;
+        RelativeOutputFactor = 1.00126;
+        PhantomOutputFactor = 1;
+        OFMeasurementDepth = 0;
+        OutputFactorInfo = "Interpolated using equivalent square.  OFc = 0.997";
+      };
+      PhotonModelDescription = "--";
+      TarTable ={
+        RawData ={
+          NumberOfDimensions = 6;
+          NumberOfPoints = 0;
+          Points[] ={
+                      };
+        };
+        LabelList ={
+          #0 ={
+            String = "Index";
+          };
+          #1 ={
+            String = "Gantry";
+          };
+          #2 ={
+            String = "Weight";
+          };
+          #3 ={
+            String = "SSD (cm)";
+          };
+          #4 ={
+            String = "Depth (cm)";
+          };
+          #5 ={
+            String = "TAR";
+          };
+        };
+        RowLabelList ={
+        };
+        LabelFormatList ={
+          #0 ={
+            String = " %g";
+          };
+          #1 ={
+            String = " %5.1f";
+          };
+          #2 ={
+            String = " %5.1f %%";
+          };
+          #3 ={
+            String = " %5.1f";
+          };
+          #4 ={
+            String = " %5.1f";
+          };
+          #5 ={
+            String = " %5.3f";
+          };
+        };
+      };
+      AvgTar = 0;
+      StereoDosePerMULookup = 0;
+      StereoDoseDiValue = 0;
+      DisplayList ={
+        #0 ={
+          Name = "Blocked Field";
+          Color = "red";
+          DashColor2d = "greyscale";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "On";
+        };
+        #1 ={
+          Name = "Wedge Thick End Indicator";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #2 ={
+          Name = "Open Field";
+          Color = "red";
+          DashColor2d = "greyscale";
+          DisplayTransparently = 0;
+          Is2dDashOn = 1;
+          OnOff2d = "Off";
+          WireOnOff = "On";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #3 ={
+          Name = "Wedge";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #4 ={
+          Name = "Wedge at End of Arc";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #5 ={
+          Name = "Central Axis Crosshair";
+          Color = "red";
+          DashColor2d = "greyscale";
+          DisplayTransparently = 0;
+          Is2dDashOn = 1;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #6 ={
+          Name = "Arc Rotation Indicator";
+          Color = "red";
+          DashColor2d = "greyscale";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #7 ={
+          Name = "Compensator";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #8 ={
+          Name = "Bolus";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #9 ={
+          Name = "MLC Leaves";
+          Color = "greyscale";
+          DashColor2d = "";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #10 ={
+          Name = "Block Plane";
+          Color = "greyscale";
+          DashColor2d = "";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "Off";
+          WashOnOff = "Off";
+        };
+        #11 ={
+          Name = "Table";
+          Color = "greyscale";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #12 ={
+          Name = "Gantry";
+          Color = "lavender";
+          DashColor2d = "red";
+          DisplayTransparently = 1;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #13 ={
+          Name = "Accelerator";
+          Color = "greyscale";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #14 ={
+          Name = "Floor";
+          Color = "lightblue";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "Off";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+        #15 ={
+          Name = "Opening Density Matrix";
+          Color = "red";
+          DashColor2d = "red";
+          DisplayTransparently = 0;
+          Is2dDashOn = 0;
+          OnOff2d = "On";
+          WireOnOff = "Off";
+          PathOnOff = "Off";
+          SolidOnOff = "On";
+          WashOnOff = "Off";
+        };
+      };
+      DoseVolume = \XDR:4\;
+      Weight = 100;
+      IsWeightLocked = 1;
+      MonitorUnitsValid = 1;
+      MonitorUnitsApproximate = 0;
+      FieldID = "";
+    };
+  };
+  ComputeRelativeDose = 0;
+  RelativeDoseNormPointName = "<None>";
+  RelativeDoseNormValue = 1.35704;
+  RelativeDoseNormValid = 0;
+  RelativeDoseReferenceFieldName = "<None>";
+  LastRelativeDoseReferenceField = "";
+  RelativeDoseComputationStatus = "Uncomputed.";
+  IsodoseNormPointName = "e Cal";
+  MaxDosePoint .Display2d = "Off";
+  UseActualPatientForIrreg = 0;
+  MaxDosePoint .Color = "red";
+  BrachyManager ={
+    DefaultSegmentTipTineLength = 0.5;
+    SourceGroupList ={
+    };
+    SeedArray ={
+      TemplateName = "BrachyTemplate_1";
+      Color = "Yellow";
+      SingleSeedCathColor = "Yellow";
+      MultiSeedCathColor = "Red";
+      CoordSystem ={
+        OriginX = 1.66;
+        OriginY = 19.38;
+        OriginZ = 0;
+        XAxisX = 7.66;
+        XAxisY = 19.38;
+        XAxisZ = 0;
+        YAxisX = 1.66;
+        YAxisY = 24.88;
+        YAxisZ = 0;
+        ZAxisX = 1.66;
+        ZAxisY = 19.38;
+        ZAxisZ = 0.5;
+        XLength = 12;
+        YLength = 11;
+        ZLength = 1;
+      };
+      PositionDefined = 1;
+      IsLocked = 0;
+    };
+    SourceList ={
+    };
+    CatheterList ={
+    };
+    FilmAP = 1;
+    FilmRL = 1;
+    BrachyFilm1 ={
+      Name = "AP Film";
+      SFD = 100;
+      SAD = 100;
+      Couch = 0;
+      Gantry = 0;
+      Collimator = 0;
+      Magnification = 1;
+      ShiftDistance = 25;
+      Target ={
+        RawData ={
+          NumberOfDimensions = 2;
+          NumberOfPoints = 0;
+          Points[] ={
+                      };
+        };
+        LabelList ={
+          #0 ={
+            String = "X";
+          };
+          #1 ={
+            String = "Y";
+          };
+        };
+        RowLabelList ={
+        };
+        LabelFormatList ={
+          #0 ={
+            String = " %g";
+          };
+          #1 ={
+            String = " %g";
+          };
+        };
+      };
+    };
+    BrachyFilm2 ={
+      Name = "LR Film";
+      SFD = 100;
+      SAD = 100;
+      Couch = 0;
+      Gantry = 0;
+      Collimator = 0;
+      Magnification = 1;
+      ShiftDistance = 25;
+      Target ={
+        RawData ={
+          NumberOfDimensions = 2;
+          NumberOfPoints = 0;
+          Points[] ={
+                      };
+        };
+        LabelList ={
+          #0 ={
+            String = "X";
+          };
+          #1 ={
+            String = "Y";
+          };
+        };
+        RowLabelList ={
+        };
+        LabelFormatList ={
+          #0 ={
+            String = " %g";
+          };
+          #1 ={
+            String = " %g";
+          };
+        };
+      };
+    };
+    ReconstructionList ={
+    };
+    MachineNameAndVersion = "None";
+    SourcePositionList = "Cath Tip to Source Center";
+    NumberOfSourcesToLoad = 10;
+    DoubleLoadTip = 0;
+    DoubleLoadBase = 0;
+    TipToFirstSourceSpace = 0.5;
+    InterSourceSpace = 2;
+    TemplateRows = 4;
+    TemplateColumns = 4;
+    TemplateRowSpace = 2;
+    TemplateColumnSpace = 2;
+    TemplateCatheterLength = 30;
+    TemplateOffsetGap = 0;
+    TemplateAutoLoadCatheters = 0;
+    TemplateGuideCathCentered = 1;
+    ReconstructionErrorTolerance = 0.5;
+    FilmReconstructionList = "Orthogonal";
+    TargetReconstructionList = "POIs";
+    CommonAxisErrorTolerance = 0.5;
+    HighlightCurrentSource = 1;
+    HighlightCurrentCath = 0;
+    DrawCurrentCathOnly = 0;
+    StereoShiftIsVertical = 1;
+  };
+  BrachyPrescriptionMethod = "Dose Rate";
+  BrachyImplantDateAndTime ={
+    UTC_ISODateAndTimeString = "2006-03-01 19:19:31Z";
+  };
+  BrachyImplantDuration = 24;
+  BrachyImplantDurationUnits = "Hours";
+  MaximumDoseForSeeds = 0;
+  PrintSubbeams = 1;
+  PrintPois = 1;
+  PrintRois = 1;
+  PrintBrachyByCatheter = 1;
+  PrintBrachyByGroup = 1;
+  PrintMLC = 0;
+  PrintMLCIrreg = 0;
+  UseTrialForTreatment = 0;
+  PlanarDoseList ={
+  };
+  BrachyDoseComputationVersion = "Unknown";
+  BrachyDose = \XDR:5\;
+  BeamPoiWeightOptimizer ={
+    PointList ={
+    };
+    SimplexOptimizer ={
+      MaxIterations = 10000;
+      Alpha = 1;
+      Beta = 0.5;
+      Gamma = 2;
+      NumDimensions = 3;
+      SolutionTolerance = 0.0001;
+      SimplexScale = 50;
+      NumberOfRestarts = 5;
+    };
+    NegativeMUPenalty = 1000;
+    ModifyPrescription = 0;
+    Grouping = "No Grouping";
+    NumberOfBeamsPenalty = 0;
+  };
+  ObjectVersion ={
+    WriteVersion = "Pinnacle v6.2b";
+    CreateVersion = "Pinnacle v6.2b";
+    LoginName = "lwunder";
+    CreateTimeStamp = "2006-03-01 14:19:31";
+    WriteTimeStamp = "2006-04-10 16:21:46";
+    LastModifiedTimeStamp = "";
+  };
+  MLCExport ={
+    PatientID = "";
+    ExportFormat = "Varian";
+    VarianVersion = "F";
+    PhilipsMLCName = "MLC_1";
+    PhilipsAccessory = 0;
+    PhilipsFitmentCode = 1;
+    ToshibaDoseRate = "Normal";
+  };
+  CourseID = 99;
+};
+
+/* [& */

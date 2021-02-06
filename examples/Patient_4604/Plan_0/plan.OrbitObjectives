@@ -1,0 +1,14 @@
+#0 ={
+  Function ={
+    ValueValid = 1;
+    Value = 0;
+    PropertyList ={
+    };
+    ROIName = "";
+  };
+  ObjectiveListTypes = "";
+  ObjectiveList ={
+  };
+};
+
+/* ÔX */

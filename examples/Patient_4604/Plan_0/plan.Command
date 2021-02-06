@@ -1,0 +1,1 @@
+/usr/local/adacnew/bin/StartPinnExec $PINN_STATIC/bin/$PINN_ARCH/Pinnacle -read_only -physician_review -dir Institution_48/Mount_0/Patient_4604/Plan_0 -plan plan

@@ -1,0 +1,87 @@
+Root ={
+  Test ={
+    UTObject ={
+    };
+  };
+};
+ReportComment = "";
+DRRCtToDensityTableName = "CT_to_RED Nov 2003";
+DVHGroup ={
+  DVHPlotStyle ={
+    BackgroundColor ={
+      Name = "";
+      Red = 1;
+      Green = 1;
+      Blue = 1;
+    };
+    TextColor ={
+      Name = "";
+      Red = 0;
+      Green = 0;
+      Blue = 0;
+    };
+    AxisLineStyle ={
+      Foreground ={
+        Name = "";
+        Red = 0;
+        Green = 0;
+        Blue = 0;
+      };
+      Background ={
+        Name = "";
+        Red = 0;
+        Green = 0;
+        Blue = 0;
+      };
+      LineStyle = "Solid";
+      LineWidth = 1;
+    };
+    GridLineStyle ={
+      Foreground ={
+        Name = "";
+        Red = 0;
+        Green = 0;
+        Blue = 0;
+      };
+      Background ={
+        Name = "";
+        Red = 0;
+        Green = 0;
+        Blue = 0;
+      };
+      LineStyle = "Solid";
+      LineWidth = 1;
+    };
+    XMinimum = 0;
+    XMaximum = 1;
+    YMinimum = 0;
+    YMaximum = 1;
+    NormalizeX = 1;
+    NormalizeY = 1;
+    CumulativeX = 0;
+    CumulativeY = 1;
+    KeepXAndYScaleEqual = 0;
+    LabelEveryOtherXTick = 0;
+    LabelEveryOtherYTick = 0;
+    Title = "Dose Volume Histogram";
+  };
+  AutoComputeMaxDose = 1;
+  MaxDoseOverride = 0;
+};
+RecommendReadOnly = 0;
+ExportFileList .Directory = "/home/p3rtp/BlkCutter";
+ExportOption = "Block Cutter";
+PoiAutoplaceMode = "Box";
+RVFormat = "LANTIS";
+RVExportName = "IKRZEWSK";
+RVDestination = "Local";
+RVRemoteDirectory = ".";
+RVRemoteHost = "rvhost";
+RVRemoteLogin = "anonymous";
+RVRemotePassword = "user@site";
+CtSimLayout = "4-slice";
+CtSimBeamLayout = "Modifiers";
+PluginModules ={
+};
+
+/*  */
