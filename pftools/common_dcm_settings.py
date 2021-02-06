@@ -1,6 +1,6 @@
-InstitutionName = 'MY CANCER CENTRE'
-InstitutionAddress = '1 NORTH POLE, ARCTIC, ON CAN'
-StationName = r'#1'
+InstitutionName = 'GRAND RIVER REGIONAL CANCER CENTRE'
+InstitutionAddress = '835 King St W, Kitchener, ON CAN'
+StationName = r'RT'
 
 DeviceSeriesNumber = ''
 ProtocolName = ''
