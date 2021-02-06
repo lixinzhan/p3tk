@@ -215,7 +215,7 @@ class PFDicom():
 
     def _setFrameOfReference(self, ds):
         ds.FrameOfReferenceUID = self.FrameOfReferenceUID
-        # ds.PositionReferenceIndicator = 'RF'  # not used, annotation purpose only
+        ds.PositionReferenceIndicator = '' #'RF'  # not used, annotation purpose only
 
     def _setInstanceUID(self, ds, inst_uid=''):
         ds.SOPInstanceUID = inst_uid
@@ -235,6 +235,8 @@ class PFDicom():
         ds.StudyTime = ''
         ds.StudyInstanceUID = self.StudySOPInstanceUID
         ds.StudyID = self.ImgSetHeader.study_id
+        ds.AccessionNumber = ''
+        ds.ReferringPhysicianName = ''
         if self.DICOMFORMAT != 'CT':
             ds.ReferencedStudySequence = self._getReferencedStudySequence()
 
