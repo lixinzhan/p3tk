@@ -234,7 +234,12 @@ class PFDicom():
         ds.StudyDate = self.ScanDate
         ds.StudyTime = ''
         ds.StudyInstanceUID = self.StudySOPInstanceUID
-        ds.StudyID = self.ImgSetHeader.study_id
+        if not(self.ImgSetHeader.study_id is None or self.ImgSetHeader.study_id.strip() == ''):
+            ds.StudyID = self.ImgSetHeader.study_id
+        elif not(self.ImgSetHeader.exam_id is None or self.ImgSetHeader.exam_id.strip() == ''):
+            ds.StudyID = self.ImgSetHeader.exam_id
+        else:
+            ds.StudyID = self.Patient.MedicalRecordNumber[-4:]
         ds.AccessionNumber = ''
         ds.ReferringPhysicianName = ''
         # if self.DICOMFORMAT != 'CT':
