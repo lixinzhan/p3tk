@@ -187,12 +187,12 @@ def readPFile(filename, ptype, outfmt=''):
                     #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                     modifier = cpts[icpts]['ModifierList']['BeamModifier']
                     nmodifier = len(modifier)
-                    if modifier[0]['ContourList'] is None or modifier[0]['ContourList']=='':
-                        continue # electron cases (or some other cases too?)
                     for imodifier in range(nmodifier):
-                        print('modifier    --> %s' % modifier[imodifier])
-                        print('contourlist --> %s' % modifier[imodifier]['ContourList'])
-                        print('curvepainter--> %s' % modifier[imodifier]['ContourList']['CurvePainter'])
+                        if modifier[imodifier]['ContourList'] is None or modifier[imodifier]['ContourList']=='':
+                            continue # electron cases (or some other cases too?)
+                        # print('modifier %s --> %s' % (imodifier, modifier[imodifier]))
+                        # print('contourlist --> %s' % modifier[imodifier]['ContourList'])
+                        # print('curvepainter--> %s' % modifier[imodifier]['ContourList']['CurvePainter'])
                         curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
                         ncurvepainter = len(curvepainter)
                         for icurve in range(ncurvepainter):

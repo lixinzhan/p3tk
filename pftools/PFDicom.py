@@ -672,7 +672,7 @@ class PFDicom():
             ds.ImageOrientationPatient = [1.0,0.0,0.0,0.0,1.0,-0.0]
         # self.SliceLocation = ''
 
-        totaldose = np.zeros(nx*ny*nz, dtype=np.float)
+        totaldose = np.zeros(nx*ny*nz, dtype=float)
         for beam in self.PlanTrial.Trial.BeamList.Beam:
             beamdose = self._getBeamDose(beam)
             totoaldose = totaldose + beamdose
@@ -747,7 +747,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    pfDicom = PFDicom(prjpath+'examples/Patient_4604')
+    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
     #pfDicom = PFDicom('/home/lzhan/PinnBackup/Institution_48/Mount_0/Patient_4604/')
     
     for imgset in pfDicom.Patient.ImageSetList.ImageSet:
