@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import logging
 
 from pftools.readPFile import readPFile
+from pftools.PFObjectVersion import _ObjectVersion
 
 class _RawData(BaseModel):
     NumberOfDimensions: Optional[int]
@@ -147,7 +148,8 @@ class _Beam(BaseModel):
       Compensator: Optional[_Compensator] = None
       CompensatorScaleFactor: Optional[float]
       ComputationVersion = ''
-      MonitorUnitInfo: Optional[_MonitorUnitInfo]
+      MonitorUnitInfo: Optional[_MonitorUnitInfo] = None
+      DoseVolume = ''
 
 
 class _BeamList(BaseModel):
@@ -185,6 +187,7 @@ class _Trial(BaseModel):
     DoseEndSlice: Optional[int]
     PrescriptionList: Optional[_PrescriptionList] = None
     BeamList: Optional[_BeamList]
+    ObjectVersion: Optional[_ObjectVersion] = None
 
 class PFPlanTrial(BaseModel):
     Trial: Optional[_Trial] = None

@@ -190,6 +190,9 @@ def readPFile(filename, ptype, outfmt=''):
                     if modifier[0]['ContourList'] is None or modifier[0]['ContourList']=='':
                         continue # electron cases (or some other cases too?)
                     for imodifier in range(nmodifier):
+                        print('modifier    --> %s' % modifier[imodifier])
+                        print('contourlist --> %s' % modifier[imodifier]['ContourList'])
+                        print('curvepainter--> %s' % modifier[imodifier]['ContourList']['CurvePainter'])
                         curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
                         ncurvepainter = len(curvepainter)
                         for icurve in range(ncurvepainter):

@@ -1,10 +1,9 @@
 import os
+import struct
 import sys
 import logging
 import datetime
 from typing import List, Sequence
-
-from numpy.core.records import _deprecate_shape_0_as_None
 
 # from pftools.PFImgInfo import PFImgInfo
 # from pftools.PFBackup import PFBackup
@@ -80,6 +79,10 @@ class PFDicom():
         self.PlanTrial = None
 
     def _initializeForDicom(self, dst='CT', id=0):
+        if dst not in ['CT', 'RS', 'RP', 'RD']:
+            logging.error('Incorrect DICOM format: %s' % dst)
+            print('Error: Incorrect DICOM format: %s' % dst)
+
         self.DICOMFORMAT = dst
         if dst == 'CT':
             self.ImageSetID = id
@@ -96,7 +99,7 @@ class PFDicom():
             datafile = '%s/ImageSet_%s.img' % (self.PFPath, id)
             self.ImageData = np.fromfile(datafile, dtype) - 1000  # ***
 
-        elif dst == 'RS' or dst == 'RD' or dst == 'RP':
+        if dst == 'RS' or dst == 'RD' or dst == 'RP':
             self.PlanID = id
             self.ImageSetID = self.PlanImageSetMap[id]
             self.ImgSetHeader = readImageSetHeader(self.PFPath, self.ImageSetID)
@@ -106,10 +109,9 @@ class PFDicom():
             self.PlanInfo = readPlanInfo(self.PFPath, self.PlanID)
             self.PlanPoints = readPlanPoints(self.PFPath, self.PlanID)
             self.PlanROI = readPlanROI(self.PFPath, self.PlanID)
-            # self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
-        else:
-            logging.error('Incorrect DICOM format: %s' % dst)
-            print('Error: Incorrect DICOM format: %s' % dst)
+
+        if dst == 'RD' or dst == 'RP':
+            self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
 
         ## common UIDs
         # self.SeriesUID = self.ImageInfo[0].SeriesUID
@@ -220,7 +222,7 @@ class PFDicom():
         ds.SOPInstanceUID = inst_uid
         if self.DICOMFORMAT == 'CT':
             ds.InstanceCreationDate = self.ScanDate
-        elif self.DICOMFORMAT == 'RS' or self.DICOMFORMAT == 'RD':
+        elif self.DICOMFORMAT in ['RS', 'RD', 'RP']:
             ds.InstanceCreationDate = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[:10].replace('-','')
 
     # def _getReferencedStudySequence(self):
@@ -618,7 +620,125 @@ class PFDicom():
         ds.save_as(ofname, write_like_original=False)
         logging.info('RS DICOM file saved: %s' % ofname)
 
+    def _getBeamDose(self, beam) -> np.array:
+        import struct
 
+        prescription = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        for presc in self.PlanTrial.Trial.PrescriptionList.Prescription:
+            if presc.Name == beam.PrescriptionName:
+                prescription = presc
+
+        binary_number = beam.DoseVolume.split(':')[1][:-1]
+        data_block = []
+        binary_file = '%s/Plan_%s/plan.Trial.binary.%s' % (self.PFPath, self.PlanID, str(binary_number).zfill(3))
+        # print('%s has binary number %s --> %s, result in binary file %s' % (beam.Name, 
+        #         beam.DoseVolume, binary_number, binary_file))
+        with open(binary_file, 'rb') as bfile:
+            data_element = bfile.read(4)
+            while data_element:
+                v_raw = struct.unpack(">f", data_element)[0]
+                # from fraction dose to total. What is actually stored in binary files: MU or fraction dose?
+                v_cnv = v_raw * prescription.NumberOfFractions / 100
+                data_block.append(v_cnv)
+                data_element = bfile.read(4)
+
+        return np.array(data_block, dtype=float)
+
+    def _setDoseImageModule(self, ds):
+        x0 = self.PlanTrial.Trial.DoseGridOriginX
+        y0 = self.PlanTrial.Trial.DoseGridOriginY
+        z0 = self.PlanTrial.Trial.DoseGridOriginZ
+        dx = self.PlanTrial.Trial.DoseGridVoxelSizeX
+        dy = self.PlanTrial.Trial.DoseGridVoxelSizeY
+        dz = self.PlanTrial.Trial.DoseGridVoxelSizeZ
+        nx = self.PlanTrial.Trial.DoseGridDimensionX
+        ny = self.PlanTrial.Trial.DoseGridDimensionY
+        nz = self.PlanTrial.Trial.DoseGridDimensionZ
+        ds.PixelSpacing = [dx, dy]
+        ds.SliceThickness = None                    # dz ***************
+        ds.Rows = ny
+        ds.Columns = nx
+        ds.NumberOfFrames = nz
+        ds.GridFrameOffsetVector = [dz*i for i in range(nz)]
+        ds.FrameIncrementPointer = ds.data_element("GridFrameOffsetVector").tag
+        ds.RescaleIntercept = 0
+        ds.RescaleSlope = 1
+        # ds.RescaleType = ''
+
+        ds.ImagePositionPatient = self.transCoord([x0, y0, z0])
+        if self.ImgSetHeader.patient_position in ['HFP', 'FFP']:
+            ds.ImageOrientationPatient = [-1.0,0.0,0.0,0.0,-1.0,-0.0]
+        else: # if ds.PatientPosition in ['HFS', 'FFS']:
+            ds.ImageOrientationPatient = [1.0,0.0,0.0,0.0,1.0,-0.0]
+        # self.SliceLocation = ''
+
+        totaldose = np.zeros(nx*ny*nz, dtype=np.float)
+        for beam in self.PlanTrial.Trial.BeamList.Beam:
+            beamdose = self._getBeamDose(beam)
+            totoaldose = totaldose + beamdose
+
+        ds.DoseGridScaling = 1.0e-6
+        totaldose = totaldose/ds.DoseGridScaling
+        scaleddose = totaldose.astype(np.int32)
+        length = nx*ny*nz
+        format = ''
+        if ds.BitsAllocated==32:
+            format = 'I'*length
+        elif ds.BitsAllocated==16:
+            format = 'H'*length
+        else:
+            logging.error('BitsAllocated: %s is not supported!' % ds.BitsAllocated)
+        ds.PixelData = struct.pack(format, *(scaleddose.tolist()))
+
+    def _getReferencedRTPlanSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        ds_refplan = Dataset()
+        ds_refplan.ReferencedSOPClassUID = self.RPSOPClassUID
+        ds_refplan.ReferencedSOPInstanceUID = self.RPSOPInstanceUID
+        seq.append(ds_refplan)
+        return seq
+
+    def _setRTDoseModule(self, ds):
+        ds.ContentDate = self.PlanTrial.Trial.ObjectVersion.WriteTimeStamp.split(' ')[0].replace('-','')
+        ds.ContentTime = self.PlanTrial.Trial.ObjectVersion.WriteTimeStamp.split(' ')[1].replace(':','')
+        ds.InstanceNumber = self.Patient.MedicalRecordNumber[-2:]+str(self.ImageSetID)+str(self.PlanID)
+        ds.SamplesPerPixel = 1
+        ds.PhotometricInterpretation = 'MONOCHROME2 '
+        ds.BitsAllocated = 32
+        ds.BitsStored = 32
+        ds.HighBit = 31
+        ds.PixelRepresentation = 0
+        ds.DoseUnits = 'GY'
+        ds.DoseType = 'PHYSICAL'
+        # ds.SpatialTransformationOfDose = 'NONE'
+        ds.DoseSummationType = 'PLAN'
+        # self.DoseGridScaling = 1
+        ds.ReferencedRTPlanSequence = self._getReferencedRTPlanSequence(ds)
+
+    def createDicomRD(self, planid=0):
+        self._initializeForDicom('RD', planid)
+
+        file_meta = FileMetaDataset()
+        file_meta.TransferSyntaxUID = self.TransferSyntaxUID
+        file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
+        file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID
+
+        ofname = '%s/RD_%s.%s.dcm' % (self.OutPath, str(planid).zfill(3), self.RDSOPInstanceUID)
+        ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
+
+        self._setSOPCommon(ds)
+        self._setPatientModule(ds)
+        self._setFrameOfReference(ds)
+        self._setStudyModule(ds)
+        self._setSeriesModule(ds)
+        self._setEquipmentModule(ds)
+        self._setRTDoseModule(ds)
+        self._setDoseImageModule(ds)
+        self._setInstanceUID(ds, self.RDSOPInstanceUID)
+
+        pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
+        ds.save_as(ofname, write_like_original=False)
+        logging.info('RD DICOM file saved: %s' % ofname)
 
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
@@ -637,3 +757,7 @@ if __name__ == '__main__':
     for plan in pfDicom.Patient.PlanList.Plan:
         pfDicom.createDicomRS(plan.PlanID)
         print('DICOM RTStruct_%s created!' % plan.PlanID)
+
+    for plan in pfDicom.Patient.PlanList.Plan:
+        pfDicom.createDicomRD(plan.PlanID)
+        print('DICOM RD for Plan_%s created!' % plan.PlanID)
