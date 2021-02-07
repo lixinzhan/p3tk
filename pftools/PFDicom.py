@@ -265,7 +265,7 @@ class PFDicom():
         elif self.DICOMFORMAT == 'RP':
             ds.Modality = 'RTPLAN'
         elif self.DICOMFORMAT == 'RD':
-            self.Modality = 'RTDOSE'
+            ds.Modality = 'RTDOSE'
         else:
             ds.Modality = self.DICOMFORMAT
         ds.PatientPosition = self.ImgSetHeader.patient_position
@@ -747,7 +747,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
+    pfDicom = PFDicom(prjpath+'examples/Patient_4604')
     #pfDicom = PFDicom('/home/lzhan/PinnBackup/Institution_48/Mount_0/Patient_4604/')
     
     for imgset in pfDicom.Patient.ImageSetList.ImageSet:
