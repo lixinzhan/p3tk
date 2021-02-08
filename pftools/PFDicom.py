@@ -212,6 +212,7 @@ class PFDicom():
             ds.InstanceCreationDate = self.ScanDate
         elif self.DICOMFORMAT in ['RS', 'RD', 'RP']:
             ds.InstanceCreationDate = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[:10].replace('-','')
+            ds.InstanceCreationTime = self.PlanPatientSetup.ObjectVersion.WriteTimeStamp[11:].replace(':','')
 
     # def _getReferencedStudySequence(self):
     #     seq = pydicom.sequence.Sequence()
