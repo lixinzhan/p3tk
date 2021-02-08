@@ -470,6 +470,7 @@ class PFDicom():
         ds.StructureSetName  = 'POIandROI'
         ds.StructureSetDate = ''
         ds.StructureSetTime = ''
+        ds.ApprovalStatus = 'UNAPPROVED'
         ds.ReferencedFrameOfReferenceSequence = self._getReferencedFrameOfReferenceSequence()
         # ds.PredecessorStructureSetSequence = self._getPredecessorStructureSetSequence(ds)
         ds.StructureSetROISequence = self._getStructureSetROISequence()
