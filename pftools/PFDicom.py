@@ -730,6 +730,114 @@ class PFDicom():
         ds.save_as(ofname, write_like_original=False)
         logging.info('RD DICOM file saved: %s' % ofname)
 
+    def _getReferencedStructureSetSequence(self, ds):
+        seq = pydicom.sequence.Sequence()
+        ds_structset = Dataset()
+        ds_structset.ReferencedSOPClassUID = self.RSSOPClassUID
+        ds_structset.ReferencedSOPInstanceUID = self.RSSOPInstanceUID
+        seq.append(ds_structset)
+        return seq
+
+    def _setRTGeneralPlanModule(self, ds):
+        ds.InstanceNumber = ''
+        ds.RTPlanLabel = ''
+        ds.RTPlanName = ''
+        ds.RTPlanDate = ''
+        ds.RTPlanTime = ''
+        # ds.TreatmentProtocols = ''
+        ds.PlanIntent = 'CURATIVE'
+        # ds.TreatmentSite = ''
+        ds.RTPlanGeometry = 'PATIENT'
+        ds.ReferencedStructureSetSequence = self._getReferencedStructureSetSequence(ds)
+    
+    def _getDoseReferenceSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_presc = Dataset()
+        ds_presc.ReferencedROINumber = ''
+        ds_presc.DoseReferenceNumber = ''
+        ds_presc.DoseReferenceStructureType = 'POINT'
+        ds_presc.DoseReferencePointCoordinates = []
+        ds_presc.DoseReferenceType = 'TARGET'
+        ds_presc.TargetPrescriptionDose = ''
+        seq.append(ds_presc)
+        return seq
+
+    def _setRTPrescriptionModule(self, ds):
+        ds.DoseReferenceSequence = self._getDoseReferenceSequence()
+
+    def _setToleranceTablesModule(self, ds):
+        pass
+
+    def _getPatientSetupSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_ptsetup = Dataset()
+        ds_ptsetup.PatientPosition = ''
+        ds_ptsetup.PatientSetupNumber = ''
+        ds_ptsetup.SetupTechnique = 'ISOCENTRIC'
+        seq.append(ds_ptsetup)
+        return seq
+
+    def _setRTPatientSetupModule(self, ds):
+        ds.PatientSetupSequence = self._getPatientSetupSequence()
+
+    def _getReferencedBeamSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_beam = Dataset()
+        ds_beam.ReferencedDoseReferenceUID = ''
+        ds_beam.BeamDose = ''
+        ds_beam.BeamMeterset = ''
+        ds_beam.BeamDoseType = ''
+        ds_beam.ReferencedBeamNumber = ''
+        seq.append(ds_beam)
+        return seq
+
+    def _getFractionGroupSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_frac = Dataset()
+        ds_frac.FractionGroupNumber = ''
+        ds_frac.NumberOfFractionsPlanned = ''
+        ds_frac.NumberOfBeams = ''
+        ds_frac.ReferencedBeamSequence = self._getReferencedBeamSequence()
+        seq.append(ds_frac)
+        return seq
+
+    def _setRTFractionSchemeModule(self, ds):
+        ds.FractionGroupSequence = self._getFractionGroupSequence()
+        pass
+
+    def _setRTBeamsModule(self, ds): # The most important module ?
+        pass
+
+    def createDicomRP(self, planid=0):
+        self._initializeForDicom('RP', planid)
+
+        file_meta = FileMetaDataset()
+        file_meta.TransferSyntaxUID = self.TransferSyntaxUID
+        file_meta.MediaStorageSOPClassUID    = self.StorageSOPClassUID
+        file_meta.MediaStorageSOPInstanceUID = self.StorageSOPInstanceUID
+
+        ofname = '%s/RP_%s.%s.dcm' % (self.OutPath, str(planid).zfill(3), self.RDSOPInstanceUID)
+        ds = FileDataset(ofname, {}, file_meta=file_meta, preamble=self.Preamble)
+
+        self._setSOPCommon(ds)
+        self._setPatientModule(ds)
+        # self._setFrameOfReference(ds)
+        self._setStudyModule(ds)
+        self._setSeriesModule(ds)
+        self._setEquipmentModule(ds)
+        self._setInstanceUID(ds, self.RDSOPInstanceUID)
+
+        self._setRTGeneralPlanModule(ds)
+        self._setRTPrescriptionModule(ds)
+        # self._setToleranceTablesModule(ds)
+        self._setRTPatientSetupModule(ds)
+        self._setRTFractionSchemeModule(ds)
+        self._setRTBeamsModule(ds)
+
+        pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
+        ds.save_as(ofname, write_like_original=False)
+        logging.info('RD DICOM file saved: %s' % ofname)
+
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 
