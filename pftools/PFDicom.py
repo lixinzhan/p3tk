@@ -242,8 +242,6 @@ class PFDicom():
         # (this is true of all attributes for the same "entity"), but there is no requirement 
         # that it be different for different series (though this is often the case for 
         # different series in the same study, especially if produced by the same equipment) 
-        ds.SeriesDate = self.ScanDate
-        ds.SeriesTime = ''
         ds.SeriesInstanceUID = self.SeriesSOPInstanceUID
         ds.SeriesNumber = self.ImgSetHeader.exam_id
         if self.DICOMFORMAT == 'CT':
@@ -257,6 +255,8 @@ class PFDicom():
             ds.Modality = 'RTDOSE'
         else:
             ds.Modality = self.DICOMFORMAT
+        # ds.SeriesDate = self.ScanDate   # Optional
+        # ds.SeriesTime = ''              # Optional
             
 
     def _setEquipmentModule(self, ds):
@@ -266,8 +266,8 @@ class PFDicom():
         else:
             ds.Manufacturer = 'P3TK'
             # ds.ManufactureModelName = self.DICOMFORMAT
-        ds.InstitutionName = dcmcommon.InstitutionName
-        ds.InstitutionAddress = dcmcommon.InstitutionAddress
+        # ds.InstitutionName = dcmcommon.InstitutionName        # Optional
+        # ds.InstitutionAddress = dcmcommon.InstitutionAddress  # Optional
         ds.StationName = dcmcommon.StationName
 
     def _setGeneralCTImageModule(self, ds):
