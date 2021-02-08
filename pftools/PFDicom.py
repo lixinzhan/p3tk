@@ -113,11 +113,6 @@ class PFDicom():
         if dst == 'RD' or dst == 'RP':
             self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
 
-        ## common UIDs
-        # self.SeriesUID = self.ImageInfo[0].SeriesUID
-        # self.StudyInstanceUID = self.ImageInfo[0].StudyInstanceUID
-        # self.FrameUID = self.ImageInfo[0].FrameUID
-
         self.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
 
         # Entropy src based SOPInstanceUID for CT, RS, RP, and RD
@@ -165,13 +160,6 @@ class PFDicom():
         # self.SeriesSOPClassUID = ssopuids.CTImageStorage
         self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()[:-3] + '666'
 
-        #print('2. StorageSOPClassUID: %s' % self.StorageSOPClassUID)
-        #print('DICOMFORMAT: %s and uid %s' % (self.DICOMFORMAT, ssopuids.RTStructureSetStorage))
-
-        # self.ClassUID = self.StorageSOPClassUID  # temp
-        # self.FrameUID = self.FrameOfReferenceUID # temp
-        # self.StudyInstanceUID = self.StorageSOPInstanceUID  # temp
-        # self.SeriesUID = self.SeriesSOPClassUID  # temp
 
         # yyyy-mm-dd to yyyymmdd   
         img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
@@ -587,6 +575,7 @@ class PFDicom():
             ds_roi.ROIInterpreter = ''
             seq.append(ds_roi)
 
+        seq[-1].ObservationNumber = 0   # related to primary volume ??
         return seq
 
     # OK now
@@ -607,7 +596,7 @@ class PFDicom():
 
         self._setSOPCommon(ds)
         self._setPatientModule(ds)
-        self._setFrameOfReference(ds)
+        # self._setFrameOfReference(ds)
         self._setStudyModule(ds)
         self._setSeriesModule(ds)
         self._setEquipmentModule(ds)
@@ -728,7 +717,7 @@ class PFDicom():
 
         self._setSOPCommon(ds)
         self._setPatientModule(ds)
-        self._setFrameOfReference(ds)
+        # self._setFrameOfReference(ds)
         self._setStudyModule(ds)
         self._setSeriesModule(ds)
         self._setEquipmentModule(ds)
