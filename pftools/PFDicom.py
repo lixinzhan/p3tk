@@ -575,7 +575,6 @@ class PFDicom():
             ds_roi.ROIInterpreter = ''
             seq.append(ds_roi)
 
-        seq[-1].ObservationNumber = 0   # related to primary volume ??
         return seq
 
     # OK now
