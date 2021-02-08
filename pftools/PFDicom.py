@@ -202,7 +202,7 @@ class PFDicom():
         ds.is_implicit_VR = False
         ds.SOPClassUID = self.SOPClassUID
 
-    def _setFrameOfReference(self, ds):
+    def _setFrameOfReference(self, ds):  # not to be included in RS
         ds.FrameOfReferenceUID = self.FrameOfReferenceUID
         ds.PositionReferenceIndicator = '' #'RF'  # not used, annotation purpose only
 
@@ -248,6 +248,7 @@ class PFDicom():
         ds.SeriesNumber = self.ImgSetHeader.exam_id
         if self.DICOMFORMAT == 'CT':
             ds.Modality = 'CT'
+            ds.PatientPosition = self.ImgSetHeader.patient_position
         elif self.DICOMFORMAT == 'RS':
             ds.Modality = 'RTSTRUCT'
         elif self.DICOMFORMAT == 'RP':
@@ -256,7 +257,6 @@ class PFDicom():
             ds.Modality = 'RTDOSE'
         else:
             ds.Modality = self.DICOMFORMAT
-        ds.PatientPosition = self.ImgSetHeader.patient_position
             
 
     def _setEquipmentModule(self, ds):
@@ -276,7 +276,7 @@ class PFDicom():
         ds.AcquisitionDate = self.ScanDate
         ds.ContentDate = self.ScanDate
         ds.AcquisitionNumber = ''
-        ds.InstanceNumber = ''
+        # ds.InstanceNumber = ''   # probably this can be ignored?
         ds.PatientOrientation = r'L\P'
 
         # CT Image Module
@@ -465,7 +465,7 @@ class PFDicom():
 
     # OK
     def _setStructureSetModule(self, ds):
-        ds.InstanceNumber = 0
+        # ds.InstanceNumber = 0   # not to be included.
         ds.StructureSetLabel = self.PlanInfo.PlanName
         ds.StructureSetName  = 'POIandROI'
         ds.StructureSetDate = ''
