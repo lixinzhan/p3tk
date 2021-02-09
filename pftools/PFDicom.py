@@ -223,7 +223,7 @@ class PFDicom():
 
     def _setStudyModule(self, ds):
         ds.StudyDate = self.ScanDate
-        ds.StudyTime = ''
+        ds.StudyTime = '000000'
         ds.StudyInstanceUID = self.StudySOPInstanceUID
         if not(self.ImgSetHeader.study_id is None or self.ImgSetHeader.study_id.strip() == ''):
             ds.StudyID = self.ImgSetHeader.study_id
@@ -739,11 +739,11 @@ class PFDicom():
         return seq
 
     def _setRTGeneralPlanModule(self, ds):
-        ds.InstanceNumber = ''
-        ds.RTPlanLabel = ''
+        ds.InstanceNumber = '1'
+        ds.RTPlanLabel = 'DUMMY_PLAN'
         ds.RTPlanName = ''
-        ds.RTPlanDate = ''
-        ds.RTPlanTime = ''
+        ds.RTPlanDate = '20210208'
+        ds.RTPlanTime = '165246.72'
         # ds.TreatmentProtocols = ''
         ds.PlanIntent = 'CURATIVE'
         # ds.TreatmentSite = ''
@@ -754,11 +754,12 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ds_presc = Dataset()
         ds_presc.ReferencedROINumber = ''
-        ds_presc.DoseReferenceNumber = ''
-        ds_presc.DoseReferenceStructureType = 'POINT'
-        ds_presc.DoseReferencePointCoordinates = []
+        ds_presc.DoseReferenceUID = self.RDSOPInstanceUID
+        ds_presc.DoseReferenceNumber = '1'
+        ds_presc.DoseReferenceStructureType = 'SITE'
+        # ds_presc.DoseReferencePointCoordinates = []
         ds_presc.DoseReferenceType = 'TARGET'
-        ds_presc.TargetPrescriptionDose = ''
+        # ds_presc.TargetPrescriptionDose = ''
         seq.append(ds_presc)
         return seq
 
@@ -783,20 +784,21 @@ class PFDicom():
     def _getReferencedBeamSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_beam = Dataset()
-        ds_beam.ReferencedDoseReferenceUID = ''
-        ds_beam.BeamDose = ''
-        ds_beam.BeamMeterset = ''
-        ds_beam.BeamDoseType = ''
-        ds_beam.ReferencedBeamNumber = ''
+        # ds_beam.ReferencedDoseReferenceUID = ''
+        ds_beam.BeamDose = '2'
+        ds_beam.BeamMeterset = '200'
+        # ds_beam.BeamDoseType = ''
+        ds_beam.ReferencedBeamNumber = '1'
         seq.append(ds_beam)
         return seq
 
     def _getFractionGroupSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_frac = Dataset()
-        ds_frac.FractionGroupNumber = ''
-        ds_frac.NumberOfFractionsPlanned = ''
-        ds_frac.NumberOfBeams = ''
+        ds_frac.FractionGroupNumber = '1'
+        ds_frac.NumberOfFractionsPlanned = '1'
+        ds_frac.NumberOfBeams = '1'
+        ds_frac.NumberOfBrachyApplicationSetups = '0'
         ds_frac.ReferencedBeamSequence = self._getReferencedBeamSequence()
         seq.append(ds_frac)
         return seq
@@ -805,8 +807,75 @@ class PFDicom():
         ds.FractionGroupSequence = self._getFractionGroupSequence()
         pass
 
+    def _getBeamLimitingDevicePositionSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_limdevx = Dataset()
+        ds_limdevx.RTBeamLimitingDeviceType = 'ASYMX'
+        ds_limdevx.LeftJawPositions = [-50, 50]
+        seq.append(ds_limdevx)
+        ds_limdevy = Dataset()
+        ds_limdevy.RTBeamLimitingDeviceType = 'ASYMY'
+        ds_limdevy.LeftJawPositions = [-50, 50]
+        seq.append(ds_limdevy)
+        return seq
+
+    def _getReferencedDoseReferenceSequence(self):
+        seq = pydicom.sequence.Sequence()
+        ds_doseref = Dataset()
+        ds_doseref.CumulativeDoseReferenceCoefficient = 0
+        ds_doseref.ReferencedDoseReferenceNumber = 1
+        seq.append(ds_doseref)
+
+    def _getControlPointSequence(self): 
+        seq = pydicom.sequence.Sequence()
+        ds_cp = Dataset()
+        ds_cp.ControlPointIndex = 0
+        ds_cp.NominalBeamEnergy = 6
+        ds_cp.DoseRateSet = 600
+        ds_cp.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence()
+        ds_cp.GantryAngle = 0
+        ds_cp.GantryRotationDirection = 'NONE'
+        ds_cp.BeamLimitingDeviceAngle = 0
+        ds_cp.BeamLimitingDeviceRotationDirection = 'NONE'
+        ds_cp.PatientSupportAngle = 0
+        ds_cp.PatientSupportRotationDirection = 'NONE'
+        ds_cp.TableTopEccentricAngle = 0
+        ds_cp.TableTopEccentricRotationDirection = 'NONE'
+        ds_cp.TableTopVerticalPosition = ''
+        ds_cp.TableTopLongitudinalPosition = ''
+        ds_cp.TableTopLateralPosition = ''
+        iso = []
+        for poi in self.PlanPoints.Poi:
+            if poi.Name == "isocentre":
+                iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+                break
+            if poi.Name == "CT REF":
+                iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+        ds_cp.IsocenterPosition = iso
+        ds_cp.CumulativeMetersetWeight = 0
+        ds_cp.TableTopPitchAngle = 0
+        ds_cp.TableTopPitchRotationDirection = 'NONE'
+        ds_cp.TableTopRollAngle = 0
+        ds_cp.TableTopRollRotationDirection = 'NONE'
+        ds_cp.ReferencedDoseReferenceSequence = self._getReferencedDoseReference()
+        seq.append(ds_cp)
+        ds_ce = Dataset()
+        ds_ce.ControlPointIndex = 1
+        ds_ce.CumulativeMetersetWeight = 1
+        ds_ce.ReferencedDoseReferenceSequence = pydicom.sequence.Sequence()
+        ds_doseref2 = Dataset()
+        ds_doseref2.CumulativeDoseReferenceCoefficient = 1
+        ds_doseref2.ReferencedDoseReferenceNumber = 1
+        ds_ce.ReferencedDoseReferenceSequence.append(ds_doseref2)
+        seq.append(ds_ce)
+        return seq
+
+
     def _setRTBeamsModule(self, ds): # The most important module ?
-        pass
+        ds.BeamSequence = pydicom.sequence.Sequence()
+        ds_bm = Dataset()
+
+        ds.BeamSequence.append(ds_bm)
 
     def createDicomRP(self, planid=0):
         self._initializeForDicom('RP', planid)
