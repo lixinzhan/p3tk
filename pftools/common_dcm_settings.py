@@ -2,7 +2,11 @@ InstitutionName = 'GRAND RIVER REGIONAL CANCER CENTRE'
 InstitutionAddress = '835 King St W, Kitchener, ON CAN'
 StationName = r'P3TK WS'
 
-DeviceSeriesNumber = ''
+TreatDeviceManufacturer = 'Varian Medical Systems'
+TreatDeviceModelName = 'TDS'
+TreatDeviceSerialNumber = '2276'
+TreatDeviceName = 'RT1TB'
+
 ProtocolName = ''
 
 KVP = ''
