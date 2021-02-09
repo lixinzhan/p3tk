@@ -761,7 +761,7 @@ class PFDicom():
 
     def _setRTGeneralPlanModule(self, ds):
         ds.InstanceNumber = '1'
-        ds.RTPlanLabel = '%s - %s' % (str(self.PlanID+1), self.PlanInfo.PlanName)
+        ds.RTPlanLabel = '%s %s' % ('Fake', self.PlanInfo.PlanName)
         ds.RTPlanName = self.PlanInfo.PlanName
         ds.RTPlanDate = '20210208'
         ds.RTPlanTime = '165246.72'
@@ -917,7 +917,7 @@ class PFDicom():
         ds_y.NumberOfLeafJawPairs = 1
         ds_bm.BeamLimitingDeviceSequence.append(ds_y)
         ds_bm.BeamNumber = 1
-        ds_bm.BeamName = 'AP'
+        ds_bm.BeamName = 'Fake Beam'
         ds_bm.BeamType = 'STATIC'
         ds_bm.RadiationType = 'PHOTON'
         ds_bm.TreatmentDeliveryType = 'TREATMENT'
