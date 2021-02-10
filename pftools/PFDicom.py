@@ -638,13 +638,6 @@ class PFDicom():
                 data_block.append(v_cnv)
                 data_element = bfile.read(4)
 
-        # # re-organize data
-        # nx = self.PlanTrial.Trial.DoseGridDimensionX
-        # ny = self.PlanTrial.Trial.DoseGridDimensionY
-        # nz = self.PlanTrial.Trial.DoseGridDimensionZ
-        # data_array = np.array(data_block, dtype=float).reshape(nz,ny,nx)
-        # shuffled_data = data_array[::, ::, ::]
-
         return np.array(data_block, dtype=float)
 
     def _setDoseImageModule(self, ds):
@@ -685,13 +678,10 @@ class PFDicom():
         for beam in self.PlanTrial.Trial.BeamList.Beam:
             beamdose = self._getBeamDose(beam)
             totaldose += beamdose
-            # print('size: ', shape(beamdose), 'beamdose: ', beamdose[2000:2005])
-            # print('size: ', shape(totaldose), 'totaldose: ', totaldose[2000:2005])
 
         ds.DoseGridScaling = 1.0e-6
         totaldose = totaldose/ds.DoseGridScaling
         scaleddose = totaldose.astype(np.int32)
-        # print('scaleddose: ', scaleddose[2000:2005])
         smallestImagePixelValue = np.amin(scaleddose)
         largestImagePixelValue  = np.amax(scaleddose)
         print('Pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
@@ -853,7 +843,7 @@ class PFDicom():
         seq.append(ds_doseref)
         return seq
 
-    def _getControlPointSequence(self): 
+    def _getControlPointSequence(self, beam): 
         seq = pydicom.sequence.Sequence()
         ds_cp1 = Dataset()
         ds_cp1.ControlPointIndex = 0
@@ -897,44 +887,48 @@ class PFDicom():
 
     def _setRTBeamsModule(self, ds): # The most important module ?
         ds.BeamSequence = pydicom.sequence.Sequence()
-        ds_bm = Dataset()
-        ds_bm.Manufacturer = dcmcommon.TreatDeviceManufacturer
-        ds_bm.ManufacturerModelName = dcmcommon.TreatDeviceModelName
-        ds_bm.TreatmentMachineName = dcmcommon.TreatDeviceName       #'RT1TB'
-        ds_bm.DeviceSerialNumber = dcmcommon.TreatDeviceSerialNumber #'2276'
+        beam_number = 0
+        for beam in self.PlanTrial.Trial.BeamList.Beam:
+            beam_number += 1
+            ds_bm = Dataset()
+            ds_bm.Manufacturer = dcmcommon.TreatDeviceManufacturer
+            ds_bm.ManufacturerModelName = dcmcommon.TreatDeviceModelName
+            ds_bm.TreatmentMachineName = dcmcommon.TreatDeviceName       #'RT1TB'
+            ds_bm.DeviceSerialNumber = dcmcommon.TreatDeviceSerialNumber #'2276'
+            ds_bm.InstitutionName = dcmcommon.InstitutionName
+            # ds_bm.InstitutionDepartmentName = ''
 
-        ds_bm.InstitutionName = dcmcommon.InstitutionName
-        # ds_bm.InstitutionDepartmentName = ''
-        ds_bm.PrimaryFluenceModeSequence = pydicom.sequence.Sequence()
-        ds_fluencemode = Dataset()
-        ds_fluencemode.FluenceMode = 'STANDARD'
-        ds_bm.PrimaryFluenceModeSequence.append(ds_fluencemode)
-        ds_bm.PrimaryDosimeterUnit = 'MU'
-        ds_bm.SourceAxisDistance = 1000
-        ds_bm.BeamLimitingDeviceSequence = pydicom.sequence.Sequence()
-        ds_x = Dataset()
-        ds_x.RTBeamLimitingDeviceType = 'ASYMX'
-        ds_x.NumberOfLeafJawPairs = 1
-        ds_bm.BeamLimitingDeviceSequence.append(ds_x)
-        ds_y = Dataset()
-        ds_y.RTBeamLimitingDeviceType = 'ASYMY'
-        ds_y.NumberOfLeafJawPairs = 1
-        ds_bm.BeamLimitingDeviceSequence.append(ds_y)
-        ds_bm.BeamNumber = 1
-        ds_bm.BeamName = 'Fake Beam'
-        ds_bm.BeamType = 'STATIC'
-        ds_bm.RadiationType = 'PHOTON'
-        ds_bm.TreatmentDeliveryType = 'TREATMENT'
-        ds_bm.NumberOfWedges = 0
-        ds_bm.NumberOfCompensators = 0
-        ds_bm.NumberOfBoli = 0
-        ds_bm.NumberOfBlocks = 0
-        ds_bm.FinalCumulativeMetersetWeight = 1
-        ds_bm.NumberOfControlPoints = 2
-        ds_bm.ControlPointSequence = self._getControlPointSequence()
-        ds_bm.ReferencedPatientSetupNumber = 1
-        ds_bm.ReferencedToleranceTableNumber = 0
-        ds.BeamSequence.append(ds_bm)
+            ds_bm.PrimaryFluenceModeSequence = pydicom.sequence.Sequence()
+            ds_fluencemode = Dataset()
+            ds_fluencemode.FluenceMode = 'STANDARD'
+            ds_bm.PrimaryFluenceModeSequence.append(ds_fluencemode)
+
+            ds_bm.PrimaryDosimeterUnit = 'MU'
+            ds_bm.SourceAxisDistance = beam.MonitorUnitInfo.SourceToPrescriptionPointDistance * 10  # 1000
+            ds_bm.BeamLimitingDeviceSequence = pydicom.sequence.Sequence()
+            ds_x = Dataset()
+            ds_x.RTBeamLimitingDeviceType = 'ASYMX'
+            ds_x.NumberOfLeafJawPairs = 1
+            ds_bm.BeamLimitingDeviceSequence.append(ds_x)
+            ds_y = Dataset()
+            ds_y.RTBeamLimitingDeviceType = 'ASYMY'
+            ds_y.NumberOfLeafJawPairs = 1
+            ds_bm.BeamLimitingDeviceSequence.append(ds_y)
+            ds_bm.BeamNumber = beam_number
+            ds_bm.BeamName = beam.Name # 'Fake Beam'
+            ds_bm.BeamType = 'STATIC' # beam.SetBeamType
+            ds_bm.RadiationType = beam.Modality.upper()[:-1] #'PHOTON'
+            ds_bm.TreatmentDeliveryType = 'TREATMENT'
+            ds_bm.NumberOfWedges = 0
+            ds_bm.NumberOfCompensators = 0
+            ds_bm.NumberOfBoli = 0
+            ds_bm.NumberOfBlocks = 0
+            ds_bm.FinalCumulativeMetersetWeight = 1
+            ds_bm.NumberOfControlPoints = len(beam.CPManager.ControlPointList.ControlPoint)
+            ds_bm.ControlPointSequence = self._getControlPointSequence(beam)
+            ds_bm.ReferencedPatientSetupNumber = 1
+            ds_bm.ReferencedToleranceTableNumber = 0
+            ds.BeamSequence.append(ds_bm)
 
     def createDicomRP(self, planid=0):
         self._initializeForDicom('RP', planid)
