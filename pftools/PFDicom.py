@@ -4,6 +4,7 @@ import sys
 import logging
 import datetime
 from typing import List, Sequence
+import copy
 
 from numpy.core.fromnumeric import shape
 
@@ -823,62 +824,104 @@ class PFDicom():
         ds.FractionGroupSequence = self._getFractionGroupSequence()
         pass
 
-    def _getBeamLimitingDevicePositionSequence(self):
+    def _getBeamLimitingDevicePositionSequence(self, cp):
         seq = pydicom.sequence.Sequence()
         ds_limdevx = Dataset()
         ds_limdevx.RTBeamLimitingDeviceType = 'ASYMX'
-        ds_limdevx.LeafJawPositions = [-50, 50]
+        # ds_limdevx.LeafJawPositions = [-50, 50]
+        ds_limdevx.LeafJawPositions = [-cp.LeftJawPosition*10, cp.RightJawPosition*10]
         seq.append(ds_limdevx)
         ds_limdevy = Dataset()
         ds_limdevy.RTBeamLimitingDeviceType = 'ASYMY'
-        ds_limdevy.LeafJawPositions = [-50, 50]
+        # ds_limdevy.LeafJawPositions = [-50, 50]
+        ds_limdevy.LeafJawPositions = [-cp.BottomJawPosition*10, cp.TopJawPosition*10]
         seq.append(ds_limdevy)
         return seq
 
     def _getReferencedDoseReferenceSequence(self, ref_coeff):
         seq = pydicom.sequence.Sequence()
         ds_doseref = Dataset()
-        ds_doseref.CumulativeDoseReferenceCoefficient = ref_coeff
+        ds_doseref.CumulativeDoseReferenceCoefficient = str('%8.4f' % ref_coeff)
         ds_doseref.ReferencedDoseReferenceNumber = 1
         seq.append(ds_doseref)
         return seq
 
-    def _getControlPointSequence(self, beam): 
+    def _getControlPointSequence(self, beam, idx_beam): 
         seq = pydicom.sequence.Sequence()
-        ds_cp1 = Dataset()
-        ds_cp1.ControlPointIndex = 0
-        ds_cp1.NominalBeamEnergy = 6
-        ds_cp1.DoseRateSet = 600
-        ds_cp1.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence()
-        ds_cp1.GantryAngle = 0
-        ds_cp1.GantryRotationDirection = 'NONE'
-        ds_cp1.BeamLimitingDeviceAngle = 0
-        ds_cp1.BeamLimitingDeviceRotationDirection = 'NONE'
-        ds_cp1.PatientSupportAngle = 0
-        ds_cp1.PatientSupportRotationDirection = 'NONE'
-        ds_cp1.TableTopEccentricAngle = 0
-        ds_cp1.TableTopEccentricRotationDirection = 'NONE'
-        ds_cp1.TableTopVerticalPosition = ''
-        ds_cp1.TableTopLongitudinalPosition = ''
-        ds_cp1.TableTopLateralPosition = ''
-        iso = []
-        for poi in self.PlanPoints.Poi:
-            if poi.Name == "isocentre":
-                iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
-                break
-            if poi.Name == "CT REF":
-                iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
-        ds_cp1.IsocenterPosition = iso
-        ds_cp1.CumulativeMetersetWeight = 0
-        ds_cp1.TableTopPitchAngle = 0
-        ds_cp1.TableTopPitchRotationDirection = 'NONE'
-        ds_cp1.TableTopRollAngle = 0
-        ds_cp1.TableTopRollRotationDirection = 'NONE'
-        ds_cp1.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(0)
-        seq.append(ds_cp1)
+        cp_idx = 0 #idx_beam * 100
+        cp_wgt = 0.0
+        for cp in beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint:
+            ds_cp = Dataset()
+            ds_cp.ControlPointIndex = cp_idx
+            ds_cp.CumulativeMetersetWeight = str('%8.4f' % cp_wgt)
+            ds_cp.NominalBeamEnergy = beam.MachineEnergyName[:-1]
+            ds_cp.DoseRateSet = 600
+            ds_cp.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence(cp)
+            ds_cp.GantryAngle = cp.Gantry
+            ds_cp.GantryRotationDirection = 'NONE'
+            ds_cp.BeamLimitingDeviceAngle = cp.Collimator
+            ds_cp.BeamLimitingDeviceRotationDirection = 'NONE'
+            if cp.Couch > 0:
+                ds_cp.PatientSupportAngle = 360.0 - cp.Couch
+            elif cp.Couch < 0:
+                ds_cp.PatientSupportAngle = 360.0 + cp.Couch
+            else:
+                ds_cp.PatientSupportAngle = cp.Couch
+            ds_cp.PatientSupportRotationDirection = 'NONE'
+            ds_cp.TableTopEccentricAngle = 0
+            ds_cp.TableTopEccentricRotationDirection = 'NONE'
+            ds_cp.TableTopVerticalPosition = ''
+            ds_cp.TableTopLongitudinalPosition = ''
+            ds_cp.TableTopLateralPosition = ''
+            iso_name = beam.IsocenterName
+            iso = []
+            for poi in self.PlanPoints.Poi:
+                if poi.Name == iso_name:
+                    iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+                    break
+            ds_cp.IsocenterPosition = iso
+            ds_cp.TableTopPitchAngle = 0
+            ds_cp.TableTopPitchRotationDirection = 'NONE'
+            ds_cp.TableTopRollAngle = 0
+            ds_cp.TableTopRollRotationDirection = 'NONE'
+            ds_cp.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(cp_wgt)
+            cp_idx += 1
+            cp_wgt += cp.Weight
+            seq.append(ds_cp)
 
-        ds_cp2 = Dataset()
-        ds_cp2.ControlPointIndex = 1
+        # ds_cp1 = Dataset()
+        # ds_cp1.ControlPointIndex = 0
+        # ds_cp1.NominalBeamEnergy = 6
+        # ds_cp1.DoseRateSet = 600
+        # ds_cp1.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence()
+        # ds_cp1.GantryAngle = 0
+        # ds_cp1.GantryRotationDirection = 'NONE'
+        # ds_cp1.BeamLimitingDeviceAngle = 0
+        # ds_cp1.BeamLimitingDeviceRotationDirection = 'NONE'
+        # ds_cp1.PatientSupportAngle = 0
+        # ds_cp1.PatientSupportRotationDirection = 'NONE'
+        # ds_cp1.TableTopEccentricAngle = 0
+        # ds_cp1.TableTopEccentricRotationDirection = 'NONE'
+        # ds_cp1.TableTopVerticalPosition = ''
+        # ds_cp1.TableTopLongitudinalPosition = ''
+        # ds_cp1.TableTopLateralPosition = ''
+        # iso = []
+        # for poi in self.PlanPoints.Poi:
+        #     if poi.Name == "isocentre":
+        #         iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+        #         break
+        #     if poi.Name == "CT REF":
+        #         iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+        # ds_cp1.IsocenterPosition = iso
+        # ds_cp1.CumulativeMetersetWeight = 0
+        # ds_cp1.TableTopPitchAngle = 0
+        # ds_cp1.TableTopPitchRotationDirection = 'NONE'
+        # ds_cp1.TableTopRollAngle = 0
+        # ds_cp1.TableTopRollRotationDirection = 'NONE'
+        # ds_cp1.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(0)
+        # seq.append(ds_cp1)
+        ds_cp2 = copy.deepcopy(seq[cp_idx-1]) #Dataset()
+        ds_cp2.ControlPointIndex = cp_idx
         ds_cp2.CumulativeMetersetWeight = 1
         ds_cp2.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(1)
         seq.append(ds_cp2)
@@ -887,9 +930,9 @@ class PFDicom():
 
     def _setRTBeamsModule(self, ds): # The most important module ?
         ds.BeamSequence = pydicom.sequence.Sequence()
-        beam_number = 0
+        beam_idx = 0
         for beam in self.PlanTrial.Trial.BeamList.Beam:
-            beam_number += 1
+            beam_idx += 1
             ds_bm = Dataset()
             ds_bm.Manufacturer = dcmcommon.TreatDeviceManufacturer
             ds_bm.ManufacturerModelName = dcmcommon.TreatDeviceModelName
@@ -904,7 +947,7 @@ class PFDicom():
             ds_bm.PrimaryFluenceModeSequence.append(ds_fluencemode)
 
             ds_bm.PrimaryDosimeterUnit = 'MU'
-            ds_bm.SourceAxisDistance = beam.MonitorUnitInfo.SourceToPrescriptionPointDistance * 10  # 1000
+            ds_bm.SourceAxisDistance = 1000 # beam.MonitorUnitInfo.SourceToPrescriptionPointDistance * 10  # 1000
             ds_bm.BeamLimitingDeviceSequence = pydicom.sequence.Sequence()
             ds_x = Dataset()
             ds_x.RTBeamLimitingDeviceType = 'ASYMX'
@@ -914,7 +957,7 @@ class PFDicom():
             ds_y.RTBeamLimitingDeviceType = 'ASYMY'
             ds_y.NumberOfLeafJawPairs = 1
             ds_bm.BeamLimitingDeviceSequence.append(ds_y)
-            ds_bm.BeamNumber = beam_number
+            ds_bm.BeamNumber = beam_idx
             ds_bm.BeamName = beam.Name # 'Fake Beam'
             ds_bm.BeamType = 'STATIC' # beam.SetBeamType
             ds_bm.RadiationType = beam.Modality.upper()[:-1] #'PHOTON'
@@ -924,8 +967,10 @@ class PFDicom():
             ds_bm.NumberOfBoli = 0
             ds_bm.NumberOfBlocks = 0
             ds_bm.FinalCumulativeMetersetWeight = 1
-            ds_bm.NumberOfControlPoints = len(beam.CPManager.ControlPointList.ControlPoint)
-            ds_bm.ControlPointSequence = self._getControlPointSequence(beam)
+            ctrl_points = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
+            ds_bm.NumberOfControlPoints = len(ctrl_points) + 1
+            cpt = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
+            ds_bm.ControlPointSequence = self._getControlPointSequence(beam, beam_idx)
             ds_bm.ReferencedPatientSetupNumber = 1
             ds_bm.ReferencedToleranceTableNumber = 0
             ds.BeamSequence.append(ds_bm)
@@ -967,7 +1012,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    pfDicom = PFDicom(prjpath+'examples/Patient_4604')
+    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
     #pfDicom = PFDicom('/home/lzhan/PinnBackup/Institution_48/Mount_0/Patient_4604/')
     
     for imgset in pfDicom.Patient.ImageSetList.ImageSet:
