@@ -624,6 +624,7 @@ class PFDicom():
                 prescription = presc
 
         binary_number = beam.DoseVolume.split(':')[1][:-1]
+        beam_mu = beam.MonitorUnitInfo.PrescriptionDose
         data_block = []
         binary_file = '%s/Plan_%s/plan.Trial.binary.%s' % (self.PFPath, self.PlanID, str(binary_number).zfill(3))
         # print('%s has binary number %s --> %s, result in binary file %s' % (beam.Name, 
@@ -633,7 +634,7 @@ class PFDicom():
             while data_element:
                 v_raw = struct.unpack(">f", data_element)[0]
                 # from fraction dose to total. What is actually stored in binary files: MU or fraction dose?
-                v_cnv = v_raw * prescription.NumberOfFractions / 100
+                v_cnv = v_raw * prescription.NumberOfFractions * beam_mu / 100
                 data_block.append(v_cnv)
                 data_element = bfile.read(4)
 
@@ -691,6 +692,9 @@ class PFDicom():
         totaldose = totaldose/ds.DoseGridScaling
         scaleddose = totaldose.astype(np.int32)
         # print('scaleddose: ', scaleddose[2000:2005])
+        smallestImagePixelValue = np.amin(scaleddose)
+        largestImagePixelValue  = np.amax(scaleddose)
+        print('Pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
         length = nx*ny*nz
         format = ''
         if ds.BitsAllocated==32:
