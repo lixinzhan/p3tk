@@ -653,7 +653,7 @@ class PFDicom():
         nz = self.PlanTrial.Trial.DoseGridDimensionZ
         # Shift applied to y. Probably ref orig is at different side of the dose region for Y.
         [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig])
-        print('orig: ', [x_orig,y_orig,z_orig], 'new: ', [x0,y0,z0])
+        # print('orig: ', [x_orig,y_orig,z_orig], 'new: ', [x0,y0,z0])
         dx = dx * 10  # cm --> mm
         dy = dy * 10
         dz = dz * 10 
@@ -685,7 +685,7 @@ class PFDicom():
         scaleddose = totaldose.astype(np.int32)
         smallestImagePixelValue = np.amin(scaleddose)
         largestImagePixelValue  = np.amax(scaleddose)
-        print('Pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
+        print('Dose pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
         length = nx*ny*nz
         format = ''
         if ds.BitsAllocated==32:
@@ -756,7 +756,7 @@ class PFDicom():
 
     def _setRTGeneralPlanModule(self, ds):
         ds.InstanceNumber = '1'
-        ds.RTPlanLabel = '%s %s' % ('Fake', self.PlanInfo.PlanName)
+        ds.RTPlanLabel = '%s-%s' % ('PF', self.PlanInfo.PlanName[:10]) # 13 chars limit on PlanName
         ds.RTPlanName = self.PlanInfo.PlanName
         ds.RTPlanDate = '20210208'
         ds.RTPlanTime = '165246.72'
@@ -769,15 +769,32 @@ class PFDicom():
     
     def _getDoseReferenceSequence(self):
         seq = pydicom.sequence.Sequence()
+        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
         ds_presc = Dataset()
-        ds_presc.ReferencedROINumber = ''
-        ds_presc.DoseReferenceUID = self.RDSOPInstanceUID
         ds_presc.DoseReferenceNumber = '1'
         ds_presc.DoseReferenceStructureType = 'SITE'
-        # ds_presc.DoseReferencePointCoordinates = []
+        ds_presc.DoseReferenceDescription = presc.Name
         ds_presc.DoseReferenceType = 'TARGET'
-        # ds_presc.TargetPrescriptionDose = ''
+        ds_presc.TargetPrescriptionDose = presc.PrescriptionDose / 100
         seq.append(ds_presc)
+        ds_presc2 = Dataset()
+        ds_presc2.DoseReferenceNumber = '2'
+        ds_presc2.DoseReferenceStructureType = 'COORDINATES'
+        ds_presc2.DoseReferenceDescription = presc.PrescriptionPoint # calc pt
+        ds_presc2.DoseReferenceType = 'TARGET'
+        ds_presc2.TargetPrescriptionDose = presc.PrescriptionDose / 100
+        pt_name = presc.PrescriptionPoint
+        pt_number = 0
+        for pt in self.PlanPoints.Poi:
+            pt_number += 1
+            if pt.Name == pt_name:
+                ds_presc2.DoseReferencePointCoordinates = self.transCoord(
+                    [pt.XCoord, pt.YCoord, pt.ZCoord] )
+                # ds_presc.ReferencedROINumber = pt_number # when struct type is POINT
+                break
+        # ds_presc.DoseReferenceUID = self.RDSOPInstanceUID
+        seq.append(ds_presc2)
+
         return seq
 
     def _setRTPrescriptionModule(self, ds):
@@ -800,21 +817,26 @@ class PFDicom():
 
     def _getReferencedBeamSequence(self):
         seq = pydicom.sequence.Sequence()
-        ds_beam = Dataset()
-        # ds_beam.ReferencedDoseReferenceUID = ''
-        ds_beam.BeamDose = '2'
-        ds_beam.BeamMeterset = '200'
-        # ds_beam.BeamDoseType = ''
-        ds_beam.ReferencedBeamNumber = '1'
-        seq.append(ds_beam)
+        beam_number = 0
+        for beam in self.PlanTrial.Trial.BeamList.Beam:
+            beam_number += 1
+            ds_beam = Dataset()
+            # ds_beam.ReferencedDoseReferenceUID = ''
+            ds_beam.BeamMeterset = beam.MonitorUnitInfo.PrescriptionDose  # **MU**
+            # the dose delivered to the dose ref point for this beam in a fraction
+            #ds_beam.BeamDose = beam.MonitorUnitInfo.PrescriptionDose / 100
+            # ds_beam.BeamDoseType = ''
+            ds_beam.ReferencedBeamNumber = beam_number
+            seq.append(ds_beam)
         return seq
 
     def _getFractionGroupSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_frac = Dataset()
-        ds_frac.FractionGroupNumber = '1'
-        ds_frac.NumberOfFractionsPlanned = '1'
-        ds_frac.NumberOfBeams = '1'
+        ds_frac.FractionGroupNumber = self.PlanID
+        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        ds_frac.NumberOfFractionsPlanned = presc.NumberOfFractions
+        ds_frac.NumberOfBeams = len(self.PlanTrial.Trial.BeamList.Beam)
         ds_frac.NumberOfBrachyApplicationSetups = '0'
         ds_frac.ReferencedBeamSequence = self._getReferencedBeamSequence()
         seq.append(ds_frac)
