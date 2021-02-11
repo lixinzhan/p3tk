@@ -67,6 +67,7 @@ class PFDicom():
         # the values can be found in the Patient file
         self.ImageSetID = -1
         self.PlanID = -1
+        self.DynamicMode = ''
         
         # 'CT', 'RS' or 'RD'
         self.DICOMFORMAT = ''
@@ -864,6 +865,16 @@ class PFDicom():
         # ds_limdevy.LeafJawPositions = [-50, 50]
         ds_limdevy.LeafJawPositions = [-cp.BottomJawPosition*10, cp.TopJawPosition*10]
         seq.append(ds_limdevy)
+        if cp.MLCLeafPositions is not None:
+            ds_mlc = Dataset()
+            ds_mlc.RTBeamLimitingDeviceType = 'MLCX'
+            mlc_pos = np.array(cp.MLCLeafPositions.RawData.Points).astype(float)
+            mlc_pos = np.fliplr(mlc_pos.reshape(60,2).transpose())
+            mlc_pos[0] = -10.0 * mlc_pos[0]
+            mlc_pos[1] =  10.0 * mlc_pos[1]
+            #print(np.around(mlc_pos,1))
+            ds_mlc.LeafJawPositions = np.around(mlc_pos.flatten(),1).tolist()
+            seq.append(ds_mlc)
         return seq
 
     def _getReferencedDoseReferenceSequence(self, ref_coeff):
@@ -878,7 +889,8 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         cp_idx = 0 #idx_beam * 100
         cp_wgt = 0.0
-        for cp in beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint:
+        ctrl_points = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
+        for cp in ctrl_points:
             ds_cp = Dataset()
             ds_cp.ControlPointIndex = cp_idx
             ds_cp.CumulativeMetersetWeight = str('%8.4f' % cp_wgt)
@@ -915,7 +927,22 @@ class PFDicom():
             ds_cp.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(cp_wgt)
             cp_idx += 1
             cp_wgt += cp.Weight
+
             seq.append(ds_cp)
+
+            if self.DynamicMode == 'STEPSHOOT':
+                ds_cp2 = copy.deepcopy(seq[cp_idx-1]) #Dataset()
+                ds_cp2.ControlPointIndex = cp_idx
+                ds_cp2.CumulativeMetersetWeight = str('%8.4f' % cp_wgt)
+                cp_idx += 1
+                seq.append(ds_cp2)
+
+        if self.DynamicMode != 'STEPSHOOT':
+            ds_cp2 = copy.deepcopy(seq[cp_idx-1]) #Dataset()
+            ds_cp2.ControlPointIndex = cp_idx
+            ds_cp2.CumulativeMetersetWeight = 1
+            ds_cp2.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(1)
+            seq.append(ds_cp2)
 
         # ds_cp1 = Dataset()
         # ds_cp1.ControlPointIndex = 0
@@ -948,11 +975,6 @@ class PFDicom():
         # ds_cp1.TableTopRollRotationDirection = 'NONE'
         # ds_cp1.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(0)
         # seq.append(ds_cp1)
-        ds_cp2 = copy.deepcopy(seq[cp_idx-1]) #Dataset()
-        ds_cp2.ControlPointIndex = cp_idx
-        ds_cp2.CumulativeMetersetWeight = 1
-        ds_cp2.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(1)
-        seq.append(ds_cp2)
         return seq
 
 
@@ -976,6 +998,7 @@ class PFDicom():
 
             ds_bm.PrimaryDosimeterUnit = 'MU'
             ds_bm.SourceAxisDistance = 1000 # beam.MonitorUnitInfo.SourceToPrescriptionPointDistance * 10  # 1000
+
             ds_bm.BeamLimitingDeviceSequence = pydicom.sequence.Sequence()
             ds_x = Dataset()
             ds_x.RTBeamLimitingDeviceType = 'ASYMX'
@@ -985,9 +1008,26 @@ class PFDicom():
             ds_y.RTBeamLimitingDeviceType = 'ASYMY'
             ds_y.NumberOfLeafJawPairs = 1
             ds_bm.BeamLimitingDeviceSequence.append(ds_y)
+            if beam.Modality == "Photons":
+                ds_mlc = Dataset()
+                ds_mlc.RTBeamLimitingDeviceType = 'MLCX'
+                ds_mlc.NumberOfLeafJawPairs = 60
+                ds_mlc.LeafPositionBoundaries = list(range(-200,-100, 10)) + list(
+                    range(-100, 100, 5)) + list(range(100,201, 10))
+                ds_bm.BeamLimitingDeviceSequence.append(ds_mlc)
+
             ds_bm.BeamNumber = beam_idx
             ds_bm.BeamName = beam.Name # 'Fake Beam'
-            ds_bm.BeamType = 'STATIC' # beam.SetBeamType
+            beam_type = beam.SetBeamType
+            if beam_type == 'Static':
+                ds_bm.BeamType = 'STATIC' # beam.SetBeamType
+                self.DynamicMode = 'NONE'
+            elif 'STEP' in str(beam_type).upper().split():
+                ds_bm.BeamType = 'STATIC'
+                self.DynamicMode = 'STEPSHOOT'
+            else:
+                ds_bm.BeamType = 'DYNAMIC'
+                self.DynamicMode = 'SLIDINGWINDOW'
             ds_bm.RadiationType = beam.Modality.upper()[:-1] #'PHOTON'
             ds_bm.TreatmentDeliveryType = 'TREATMENT'
             ds_bm.NumberOfWedges = 0
@@ -996,7 +1036,10 @@ class PFDicom():
             ds_bm.NumberOfBlocks = 0
             ds_bm.FinalCumulativeMetersetWeight = 1
             ctrl_points = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
-            ds_bm.NumberOfControlPoints = len(ctrl_points) + 1
+            if self.DynamicMode == 'STEPSHOOT':
+                ds_bm.NumberOfControlPoints = 2 * len(ctrl_points)
+            else:   # both STATIC and SLIDINGWINDOW
+                ds_bm.NumberOfControlPoints = len(ctrl_points) + 1
             cpt = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
             ds_bm.ControlPointSequence = self._getControlPointSequence(beam, beam_idx)
             ds_bm.ReferencedPatientSetupNumber = 1
