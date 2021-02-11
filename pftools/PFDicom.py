@@ -822,9 +822,13 @@ class PFDicom():
             beam_number += 1
             ds_beam = Dataset()
             # ds_beam.ReferencedDoseReferenceUID = ''
-            ds_beam.BeamMeterset = beam.MonitorUnitInfo.PrescriptionDose  # **MU**
+            ds_beam.BeamMeterset = beam.MonitorUnitInfo.PrescriptionDose * (
+                beam.MonitorUnitInfo.NormalizedDose * beam.MonitorUnitInfo.CollimatorOutputFactor
+            ) # **MU**
             # the dose delivered to the dose ref point for this beam in a fraction
-            #ds_beam.BeamDose = beam.MonitorUnitInfo.PrescriptionDose / 100
+            ds_beam.BeamDose = str('%8.3f' % (
+                beam.MonitorUnitInfo.PrescriptionDose / 100 * 
+                beam.MonitorUnitInfo.TotalTransmissionFraction) )
             # ds_beam.BeamDoseType = ''
             ds_beam.ReferencedBeamNumber = beam_number
             seq.append(ds_beam)
