@@ -67,10 +67,12 @@ class PFDicom():
         # the values can be found in the Patient file
         self.ImageSetID = -1
         self.PlanID = -1
-        self.DynamicMode = ''
         
         # 'CT', 'RS' or 'RD'
         self.DICOMFORMAT = ''
+
+        # 'NONE', 'STEPSHOOT', 'SLIDINGWINDOW'
+        self.DynamicMode = ''
 
         # plan files to be read in to
         self.ImgSetHeader = None
