@@ -1,4 +1,5 @@
 import os
+from pftools.PFPlanMachine import readMachine
 import struct
 import sys
 import logging
@@ -21,6 +22,7 @@ from pftools.PFPlanPatientSetup import readPlanPatientSetup
 from pftools.PFPlanPoints import readPlanPoints
 from pftools.PFPlanROI import readPlanROI
 from pftools.PFPlanTrial import readPlanTrial
+from pftools.PFPlanMachine import readMachine
 
 import pydicom.uid
 import pydicom.sequence
@@ -118,6 +120,7 @@ class PFDicom():
 
         if dst == 'RD' or dst == 'RP':
             self.PlanTrial = readPlanTrial(self.PFPath, self.PlanID)
+            self.PlanMachine = readMachine(self.PFPath, self.PlanID)
 
         self.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
 
@@ -619,6 +622,31 @@ class PFDicom():
         ds.save_as(ofname, write_like_original=False)
         logging.info('RS DICOM file saved: %s' % ofname)
 
+    def _getDosePerMuAtCalib(self, beam):
+        beam_energy = beam.MachineEnergyName[:-1]            
+        calib_dose_per_mu = 1
+        if beam.Modality == 'Electrons':
+            for mach_en in self.PlanMachine.Machine[0].ElectronEnergyList.MachineEnergy:
+                if int(mach_en.Value) == int(beam_energy):
+                    calib_dose_per_mu = mach_en.PhysicsData.OutputFactor.DosePerMuAtCalibration
+                    break
+        if beam.Modality == "Photons":
+            for mach_en in self.PlanMachine.Machine[0].PhotonEnergyList.MachineEnergy:
+                if int(mach_en.Value) == int(beam_energy):
+                    calib_dose_per_mu = mach_en.PhysicsData.OutputFactor.DosePerMuAtCalibration
+                    break
+        return calib_dose_per_mu
+
+    def _getBeamMU(self, beam):
+        beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
+        beam_rof = beam.MonitorUnitInfo.CollimatorOutputFactor
+        calib_dose_per_mu = self._getDosePerMuAtCalib(beam)
+        beam_mu = beam_presc_dose /(beam.MonitorUnitInfo.NormalizedDose * beam_rof)
+        beam_mu = beam_mu/calib_dose_per_mu
+        # print('--> Dose/MU @calib: %s, beam_mu %s' % (calib_dose_per_mu, beam_mu))
+        return beam_mu
+
+
     def _getBeamDose(self, beam) -> np.array:
         import struct
 
@@ -626,20 +654,21 @@ class PFDicom():
         for presc in self.PlanTrial.Trial.PrescriptionList.Prescription:
             if presc.Name == beam.PrescriptionName:
                 prescription = presc
-
+        
         binary_number = beam.DoseVolume.split(':')[1][:-1]
         beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
-        print('--> Total Fracs: %s, beam_presc_dose %s' % (prescription.NumberOfFractions, beam_presc_dose))
+        beam_mu = self._getBeamMU(beam)
+        print('%12s --> Fracs: %s, presc_dose %8.3f, MU: %8.3f' % (
+            beam.Name, prescription.NumberOfFractions, 
+            beam_presc_dose, beam_mu))
         data_block = []
         binary_file = '%s/Plan_%s/plan.Trial.binary.%s' % (self.PFPath, self.PlanID, str(binary_number).zfill(3))
-        # print('%s has binary number %s --> %s, result in binary file %s' % (beam.Name, 
-        #         beam.DoseVolume, binary_number, binary_file))
         with open(binary_file, 'rb') as bfile:
             data_element = bfile.read(4)
             while data_element:
                 v_raw = struct.unpack(">f", data_element)[0]
-                # from fraction dose to total. What is actually stored in binary files: MU or fraction dose?
-                v_cnv = v_raw * prescription.NumberOfFractions * beam_presc_dose / 100
+                # v_cnv = v_raw * prescription.NumberOfFractions * beam_presc_dose / 100
+                v_cnv = v_raw * prescription.NumberOfFractions * self._getBeamMU(beam) / 100
                 data_block.append(v_cnv)
                 data_element = bfile.read(4)
 
@@ -689,6 +718,9 @@ class PFDicom():
         scaleddose = totaldose.astype(np.int32)
         smallestImagePixelValue = np.amin(scaleddose)
         largestImagePixelValue  = np.amax(scaleddose)
+        print('Prescription: %s/%s' % (
+            self.PlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose, 
+            self.PlanTrial.Trial.PrescriptionList.Prescription[0].NumberOfFractions))
         print('Dose pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
         length = nx*ny*nz
         format = ''
@@ -825,16 +857,14 @@ class PFDicom():
         for beam in self.PlanTrial.Trial.BeamList.Beam:
             beam_number += 1
             ds_beam = Dataset()
+            beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
             # ds_beam.ReferencedDoseReferenceUID = ''
-            ds_beam.BeamMeterset = round(
-                beam.MonitorUnitInfo.PrescriptionDose *
-                beam.MonitorUnitInfo.NormalizedDose * 
-                beam.MonitorUnitInfo.CollimatorOutputFactor, 6                
-            ) # **MU**
-            # the dose delivered to the dose ref point for this beam in a fraction
             ds_beam.BeamDose = round(
-                beam.MonitorUnitInfo.PrescriptionDose / 100 * 
+                beam_presc_dose / 100 * 
                 beam.MonitorUnitInfo.TotalTransmissionFraction, 6)
+            # beam_rof = float(beam.MonitorUnitInfo.OutputFactorInfo.split(':')[-1])
+            ds_beam.BeamMeterset = round(self._getBeamMU(beam),3)  # **MU**
+            # the dose delivered to the dose ref point for this beam in a fraction
             # ds_beam.BeamDoseType = ''
             ds_beam.ReferencedBeamNumber = beam_number
             seq.append(ds_beam)

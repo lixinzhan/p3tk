@@ -207,7 +207,7 @@ def readPFile(filename, ptype, outfmt=''):
 
     if outfmt == 'yaml':
         return ystr
-    print(ystr)
+    # print(ystr)
 
 
     ################################################
