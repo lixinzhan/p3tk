@@ -22,6 +22,7 @@ import sys
 import logging
 import re
 import json
+from numpy import append
 import yaml
 from yaml.loader import FullLoader, BaseLoader
 from copy import deepcopy
@@ -33,8 +34,52 @@ class PFObj(object):
 def dict2obj(d):
     return json.loads(json.dumps(d), object_hook=PFObj)
 
+def _processPFMachine(text):
+    rm_start = False
+    rm_end = True
+    new_text = []
+    for line in text:
+        if 'MultiLeaf ={' in line:
+            rm_start = True
+            rm_end = False
+        if 'PhotonEnergyList ={' in line:
+            rm_end = True
+            rm_start = False
+        if 'MeasureGeometryList ={' in line:
+            rm_start = True
+            rm_end = False
+        if 'ComputationVersion = ' in line:
+            rm_end = True
+            rm_start = False
+        if 'PhotonModelList ={' in line:
+            rm_start = True
+            rm_end = False
+        if 'StereoPhysicsData ={' in line:
+            rm_end = True
+            rm_start = False
+        if 'ConeList ={' in line:
+            rm_start = True
+            rm_end = False
+        if 'FileChecksum = ' in line:
+            rm_end = True
+            rm_start = False
+        if 'CouchAngle ={' in line:
+            rm_start = True
+            rm_end = False
+        if 'PhotonEnergyList ={' in line:
+            rm_end = True
+            rm_start = False
+        if not(rm_start==True and rm_end==False):
+            new_text.append(line)
+
+    # for line in new_text:
+    #     print(line)
+    return new_text
+        
 def readPFile(filename, ptype, outfmt=''):
     text = open(filename, 'r', encoding='latin1')
+
+    # the part that will be converted to list
     strlist = ['% A string will never appear. %']
     if ptype == 'plan.Points':
         strlist = ['Poi ={']
@@ -47,6 +92,8 @@ def readPFile(filename, ptype, outfmt=''):
     elif ptype == 'plan.Trial':
         strlist = ['Prescription ={', 'Beam ={', 'CPManagerObject ={', 
                     'FilmImage ={', 'BeamModifier ={', 'CurvePainter ={']
+    elif ptype == 'plan.Machine':
+        strlist = ['MachineEnergy ={']
     ystr = ''
 
     logging.info('reading in %s with type %s done.' % (filename, ptype))
@@ -78,13 +125,17 @@ def readPFile(filename, ptype, outfmt=''):
         line = indent + line.strip() + '\n'
         level = level+1 if '{' in line else level
         level = level-1 if '}' in line else level
-        newtext.append(line)
     #for line in newtext:
     #    print(line[:-1])
+        newtext.append(line)
     text.close()
     logging.info('comments removed and indent corrected')
     ################################################
-    
+    # process for plan.Machine
+    if ptype == 'plan.Machine':
+        newtext = _processPFMachine(newtext)
+    #print(newtext)    
+
     ################################################
     ## add '-' for lists    
     occured = [False]*len(strlist)
@@ -120,6 +171,18 @@ def readPFile(filename, ptype, outfmt=''):
             line = '    '*mylevel + 'LabelFormat :\n' + '    '*mylevel + '  - \n'
         if ptype == 'plan.Trial' and re.search(r'^_[0-9]{1,3}\s={$',line.strip()) is not None:
             line = '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and mylevel == 0 and '_0 ={' in line:
+            line = '    '*mylevel + 'Machine :\n' + '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and mylevel == 0 and re.search(r'^_[0-9]{1,3}\s={$',line.strip()) is not None:
+            line = '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and 'LabelList ={' in preline and '_0 ={' in line:
+            line = '    '*mylevel + 'Label :\n' + '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and 'LabelFormatList ={' in preline and '_0 ={' in line:
+            line = '    '*mylevel + 'LabelFormat :\n' + '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and 'VendorDataList ={' in preline and '_0 ={' in line:
+            line = '    '*mylevel + 'VendorData :\n' + '    '*mylevel + '  - \n'
+        if ptype == 'plan.Machine' and re.search(r'^_[0-9]{1,3}\s={$',line.strip()) is not None:
+            line = '    '*mylevel + '  - \n'
         preline = line
 
         text.append(line)
@@ -141,9 +204,12 @@ def readPFile(filename, ptype, outfmt=''):
     #print(ystr)
     logging.info(filename + ' conversion to yaml compatible format done')
     ################################################
+
     if outfmt == 'yaml':
         return ystr
-    
+    print(ystr)
+
+
     ################################################
     # convert to python dict from yaml
     if outfmt == 'dict':

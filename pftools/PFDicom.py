@@ -628,7 +628,8 @@ class PFDicom():
                 prescription = presc
 
         binary_number = beam.DoseVolume.split(':')[1][:-1]
-        beam_mu = beam.MonitorUnitInfo.PrescriptionDose
+        beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
+        print('--> Total Fracs: %s, beam_presc_dose %s' % (prescription.NumberOfFractions, beam_presc_dose))
         data_block = []
         binary_file = '%s/Plan_%s/plan.Trial.binary.%s' % (self.PFPath, self.PlanID, str(binary_number).zfill(3))
         # print('%s has binary number %s --> %s, result in binary file %s' % (beam.Name, 
@@ -638,7 +639,7 @@ class PFDicom():
             while data_element:
                 v_raw = struct.unpack(">f", data_element)[0]
                 # from fraction dose to total. What is actually stored in binary files: MU or fraction dose?
-                v_cnv = v_raw * prescription.NumberOfFractions * beam_mu / 100
+                v_cnv = v_raw * prescription.NumberOfFractions * beam_presc_dose / 100
                 data_block.append(v_cnv)
                 data_element = bfile.read(4)
 
@@ -859,12 +860,10 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ds_limdevx = Dataset()
         ds_limdevx.RTBeamLimitingDeviceType = 'ASYMX'
-        # ds_limdevx.LeafJawPositions = [-50, 50]
         ds_limdevx.LeafJawPositions = [-cp.LeftJawPosition*10, cp.RightJawPosition*10]
         seq.append(ds_limdevx)
         ds_limdevy = Dataset()
         ds_limdevy.RTBeamLimitingDeviceType = 'ASYMY'
-        # ds_limdevy.LeafJawPositions = [-50, 50]
         ds_limdevy.LeafJawPositions = [-cp.BottomJawPosition*10, cp.TopJawPosition*10]
         seq.append(ds_limdevy)
         if cp.MLCLeafPositions is not None:
@@ -946,37 +945,6 @@ class PFDicom():
             ds_cp2.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(1)
             seq.append(ds_cp2)
 
-        # ds_cp1 = Dataset()
-        # ds_cp1.ControlPointIndex = 0
-        # ds_cp1.NominalBeamEnergy = 6
-        # ds_cp1.DoseRateSet = 600
-        # ds_cp1.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence()
-        # ds_cp1.GantryAngle = 0
-        # ds_cp1.GantryRotationDirection = 'NONE'
-        # ds_cp1.BeamLimitingDeviceAngle = 0
-        # ds_cp1.BeamLimitingDeviceRotationDirection = 'NONE'
-        # ds_cp1.PatientSupportAngle = 0
-        # ds_cp1.PatientSupportRotationDirection = 'NONE'
-        # ds_cp1.TableTopEccentricAngle = 0
-        # ds_cp1.TableTopEccentricRotationDirection = 'NONE'
-        # ds_cp1.TableTopVerticalPosition = ''
-        # ds_cp1.TableTopLongitudinalPosition = ''
-        # ds_cp1.TableTopLateralPosition = ''
-        # iso = []
-        # for poi in self.PlanPoints.Poi:
-        #     if poi.Name == "isocentre":
-        #         iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
-        #         break
-        #     if poi.Name == "CT REF":
-        #         iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
-        # ds_cp1.IsocenterPosition = iso
-        # ds_cp1.CumulativeMetersetWeight = 0
-        # ds_cp1.TableTopPitchAngle = 0
-        # ds_cp1.TableTopPitchRotationDirection = 'NONE'
-        # ds_cp1.TableTopRollAngle = 0
-        # ds_cp1.TableTopRollRotationDirection = 'NONE'
-        # ds_cp1.ReferencedDoseReferenceSequence = self._getReferencedDoseReferenceSequence(0)
-        # seq.append(ds_cp1)
         return seq
 
 
