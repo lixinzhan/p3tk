@@ -14,25 +14,27 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--type', help='Output type: CT, RS, RP, RD or ALL, default to ALL')
     args = parser.parse_args()
 
-    ptdir = args.input
-    if args.output:
-        dcmdir = args.output
-    else:
-        dcmdir = '.'
-
+    dcmdir  = ''
+    dcmtype = 'ALL'
     dcmCT = False
     dcmRS = False
     dcmRP = False
     dcmRD = False
+
+    ptdir = args.input
+    if args.output:
+        dcmdir = args.output
     if args.type:
         dcmtype = args.type
-    else:
-        dcmtype = 'ALL'
 
-    if dcmtype == 'CT': dcmCT = True
-    elif dcmtype == 'RS': dcmRS = True
-    elif dcmtype == 'RP': dcmRP = True
-    elif dcmtype == 'RD': dcmRD = True
+    if dcmtype == 'CT': 
+        dcmCT = True
+    elif dcmtype == 'RS': 
+        dcmRS = True
+    elif dcmtype == 'RP': 
+        dcmRP = True
+    elif dcmtype == 'RD': 
+        dcmRD = True
     elif dcmtype == 'ALL':
         dcmCT = True
         dcmRS = True
@@ -53,7 +55,7 @@ if __name__ == '__main__':
     if dcmRS:        
         for plan in pfDicom.Patient.PlanList.Plan:
             pfDicom.createDicomRS(plan.PlanID)
-            print('DICOM RTStruct_%s created!' % plan.PlanID)
+            print('DICOM RS for Plan_%s created!' % plan.PlanID)
 
     if dcmRD:
         for plan in pfDicom.Patient.PlanList.Plan:
