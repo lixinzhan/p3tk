@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     if dcmRS:        
         for plan in pfDicom.Patient.PlanList.Plan:
-            print('Creating DICOM RS for Plan_%s ...!' % plan.PlanID)
+            print('Creating DICOM RS for Plan_%s ...' % plan.PlanID)
             pfDicom.createDicomRS(plan.PlanID)
             print('Done!\n')
 
