@@ -222,7 +222,7 @@ def readPFile(filename, ptype, outfmt=''):
 
     ################################################
     # Points in plan.rio are not fully done. Convert to list here
-    if ptype == 'plan.roi':
+    if ptype == 'plan.roi' and yobj is not None:
         for iroi in range(len(yobj['roi'])):
             for icurve in range(len(yobj['roi'][iroi]['curve'])):
                 pts = [float(pt) for pt in yobj['roi'][iroi]['curve'][icurve]['points'][0].split()]

@@ -465,14 +465,15 @@ class PFDicom():
             seq.append(ds_roi)
 
         # read from plan.roi with roi_number continue
-        for roi in self.PlanROI.roi:
-            roi_number += 1
-            ds_roi = Dataset()
-            ds_roi.ROINumber = roi_number
-            ds_roi.ROIName = roi.name
-            ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
-            ds_roi.ReferencedFrameOfReferenceUID = self.FrameOfReferenceUID
-            seq.append(ds_roi)
+        if self.PlanROI is not None:
+            for roi in self.PlanROI.roi:
+                roi_number += 1
+                ds_roi = Dataset()
+                ds_roi.ROINumber = roi_number
+                ds_roi.ROIName = roi.name
+                ds_roi.ROIGenerationAlgorithm = 'SEMIAUTOMATIC'
+                ds_roi.ReferencedFrameOfReferenceUID = self.FrameOfReferenceUID
+                seq.append(ds_roi)
 
         return seq
 
@@ -549,16 +550,18 @@ class PFDicom():
             seq.append(ds_roicontour)
 
         # plan.roi, continue with roi_number
-        for roi in self.PlanROI.roi:
-            roi_number += 1
-            ds_roicontour = Dataset()
-            try:
-                ds_roicontour.ROIDisplayColor = PFColor(roi.color).getRGB()
-            except:
-                ds_roicontour.ROIDisplayColor = PFColor('yellow').getRGB()
-            ds_roicontour.ReferencedROINumber = roi_number
-            ds_roicontour.ContourSequence = self._getContourSequence(roi, ctype='CLOSED_PLANAR')
-            seq.append(ds_roicontour)
+        if self.PlanROI is not None:
+            for roi in self.PlanROI.roi:
+                roi_number += 1
+                ds_roicontour = Dataset()
+                try:
+                    ds_roicontour.ROIDisplayColor = PFColor(roi.color).getRGB()
+                except:
+                    ds_roicontour.ROIDisplayColor = PFColor('yellow').getRGB()
+                ds_roicontour.ReferencedROINumber = roi_number
+                ds_roicontour.ContourSequence = self._getContourSequence(roi, ctype='CLOSED_PLANAR')
+                seq.append(ds_roicontour)
+
         return seq
 
     # OK
@@ -582,15 +585,16 @@ class PFDicom():
             seq.append(ds_roi)
 
         # read from plan.roi with roi_number continue
-        for roi in self.PlanROI.roi:
-            roi_number += 1
-            ds_roi = Dataset()
-            ds_roi.ObservationNumber = roi_number
-            ds_roi.ReferencedROINumber = roi_number
-            ds_roi.ROIObservationLabel = roi.name
-            ds_roi.RTROIInterpretedType = 'ORGAN'
-            ds_roi.ROIInterpreter = ''
-            seq.append(ds_roi)
+        if self.PlanROI is not None:
+            for roi in self.PlanROI.roi:
+                roi_number += 1
+                ds_roi = Dataset()
+                ds_roi.ObservationNumber = roi_number
+                ds_roi.ReferencedROINumber = roi_number
+                ds_roi.ROIObservationLabel = roi.name
+                ds_roi.RTROIInterpretedType = 'ORGAN'
+                ds_roi.ROIInterpreter = ''
+                seq.append(ds_roi)
 
         return seq
 

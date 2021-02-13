@@ -25,6 +25,7 @@ class PFPlanROI(BaseModel):
 def readPlanROI(pfpath, planid=0):
     fname = '%s/Plan_%s/plan.roi' % (pfpath, planid)
     pdict = readPFile(fname, 'plan.roi', 'dict')
+    if pdict is None: return None
     pfObj = PFPlanROI(**pdict)
     return pfObj
 
