@@ -648,8 +648,11 @@ class PFDicom():
         beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
         beam_rof = beam.MonitorUnitInfo.CollimatorOutputFactor
         calib_dose_per_mu = self._getDosePerMuAtCalib(beam)
-        beam_mu = beam_presc_dose /(beam.MonitorUnitInfo.NormalizedDose * beam_rof)
-        beam_mu = beam_mu/calib_dose_per_mu
+        norm_dose = beam.MonitorUnitInfo.NormalizedDose
+        if norm_dose == 0 or beam_rof == 0 or calib_dose_per_mu == 0:
+            beam_mu = 0
+        else:
+            beam_mu = beam_presc_dose /(norm_dose * beam_rof * calib_dose_per_mu)
         # print('--> Dose/MU @calib: %s, beam_mu %s' % (calib_dose_per_mu, beam_mu))
         return beam_mu
 

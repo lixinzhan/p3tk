@@ -163,6 +163,7 @@ def readPFile(filename, ptype, outfmt=''):
                 inloop[i] = True
                 occured[i] = True
 
+        # formating #0, #1 ... to list expression in yaml
         if ptype == 'plan.Trial' and 'ControlPointList ={' in preline and '_0 ={' in line:
             line = '    '*mylevel + 'ControlPoint :\n' + '    '*mylevel + '  - \n'
         if ptype == 'plan.Trial' and 'RowLabelList ={' in preline and '_0 ={' in line:
@@ -223,10 +224,15 @@ def readPFile(filename, ptype, outfmt=''):
     ################################################
     # Points in plan.rio are not fully done. Convert to list here
     if ptype == 'plan.roi' and yobj is not None:
-        for iroi in range(len(yobj['roi'])):
-            for icurve in range(len(yobj['roi'][iroi]['curve'])):
-                pts = [float(pt) for pt in yobj['roi'][iroi]['curve'][icurve]['points'][0].split()]
-                yobj['roi'][iroi]['curve'][icurve]['points'] = pts
+        for iroi in reversed(range(len(yobj['roi']))):
+            roi = yobj['roi'][iroi]
+            if int(roi['num_curve']) > 0:
+                for curve in roi['curve']:
+                    pts = [float(pt) for pt in curve['points'][0].split()]
+                    curve['points'] = pts
+            else:
+                yobj['roi'].pop(iroi)
+        
         logging.info('post-processing dict for Points in plan.roi done')
     #print(yobj['roi'][1]['curve'][0]['points'])
     ################################################
@@ -251,6 +257,9 @@ def readPFile(filename, ptype, outfmt=''):
                     leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
                     cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                     #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                    mdflist = cpts[icpts]['ModifierList']
+                    if cpts[icpts]['ModifierList'] is None or cpts[icpts]['ModifierList'] == '':                        
+                        cpts[icpts]['ModifierList'] = {'BeamModifier':[{'Name':'', 'ContourList': None}]}
                     modifier = cpts[icpts]['ModifierList']['BeamModifier']
                     nmodifier = len(modifier)
                     for imodifier in range(nmodifier):
