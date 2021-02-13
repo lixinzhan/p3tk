@@ -78,6 +78,7 @@ def _processPFMachine(text):
         
 def readPFile(filename, ptype, outfmt=''):
     text = open(filename, 'r', encoding='latin1')
+    # text = open(filename, 'r', encoding='iso-8859-1', errors='surrogateescape')
 
     # the part that will be converted to list
     strlist = ['% A string will never appear. %']
@@ -257,7 +258,7 @@ def readPFile(filename, ptype, outfmt=''):
                     leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
                     cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                     #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
-                    mdflist = cpts[icpts]['ModifierList']
+                    # adding in missing part in some plan.Trial
                     if cpts[icpts]['ModifierList'] is None or cpts[icpts]['ModifierList'] == '':                        
                         cpts[icpts]['ModifierList'] = {'BeamModifier':[{'Name':'', 'ContourList': None}]}
                     modifier = cpts[icpts]['ModifierList']['BeamModifier']

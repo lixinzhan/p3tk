@@ -721,7 +721,11 @@ class PFDicom():
         totaldose = np.zeros(nx*ny*nz, dtype=float)
         for beam in self.PlanTrial.Trial.BeamList.Beam:
             beamdose = self._getBeamDose(beam)
-            totaldose += beamdose
+            if len(beamdose) != nx*ny*nz:
+                logging.error('Beam %s has mismatching dose grid!' % beam.Name)
+                print('Beam %s has mismatching dose grid' % beam.Name)
+            else:
+                totaldose += beamdose
 
         ds.DoseGridScaling = 1.0e-6
         totaldose = totaldose/ds.DoseGridScaling
