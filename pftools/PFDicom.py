@@ -718,10 +718,13 @@ class PFDicom():
         scaleddose = totaldose.astype(np.int32)
         smallestImagePixelValue = np.amin(scaleddose)
         largestImagePixelValue  = np.amax(scaleddose)
-        print('Prescription: %s/%s' % (
-            self.PlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose, 
-            self.PlanTrial.Trial.PrescriptionList.Prescription[0].NumberOfFractions))
-        print('Dose pixel value range: [%s, %s]' % (smallestImagePixelValue, largestImagePixelValue))
+        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        presc_dose = presc.PrescriptionDose
+        presc_frac = presc.NumberOfFractions
+        print('Prescription: %s/%s' % (presc_dose, presc_frac))
+        print('Dose pixel value range: [%s, %s], resulting in Dmax: %6.2f%s' % (
+            smallestImagePixelValue, largestImagePixelValue,
+            largestImagePixelValue*0.01/presc_dose, '%'))
         length = nx*ny*nz
         format = ''
         if ds.BitsAllocated==32:

@@ -49,20 +49,24 @@ if __name__ == '__main__':
     
     if dcmCT:
         for imgset in pfDicom.Patient.ImageSetList.ImageSet:
+            print('Creating DICOM CT for ImageSet_%s ...' % imgset.ImageSetID) 
             pfDicom.createDicomCT(imgset.ImageSetID)
-            print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
+            print('Done!\n')
 
     if dcmRS:        
         for plan in pfDicom.Patient.PlanList.Plan:
+            print('Creating DICOM RS for Plan_%s ...!' % plan.PlanID)
             pfDicom.createDicomRS(plan.PlanID)
-            print('DICOM RS for Plan_%s created!' % plan.PlanID)
+            print('Done!\n')
 
     if dcmRD:
         for plan in pfDicom.Patient.PlanList.Plan:
+            print('Creating DICOM RD for Plan_%s ...' % plan.PlanID)
             pfDicom.createDicomRD(plan.PlanID)
-            print('DICOM RD for Plan_%s created!' % plan.PlanID)
+            print('Done!\n')
 
     if dcmRP:
         for plan in pfDicom.Patient.PlanList.Plan:
+            print('Creating DICOM RP for Plan_%s ...' % plan.PlanID)
             pfDicom.createDicomRP(plan.PlanID)
-            print('DICOM RP for Plan_%s created!' % plan.PlanID)
+            print('Done!\n')
