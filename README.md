@@ -28,7 +28,7 @@ python3 app.py -i backup_patient_folder -o dicom_output_folder -t ALL
 The '-t' switch specifies the output DICOM files be CT, RS, RP, RD, or ALL.
 
 
-=======================================================================================
+=========================================================================
 
 Some backgroud:
 
