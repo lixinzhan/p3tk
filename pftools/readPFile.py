@@ -110,6 +110,8 @@ def readPFile(filename, ptype, outfmt=''):
             line = line.split('//',2)[0]+'\n'
         if '/*' in line:
             line = line.split('/*',2)[0]+'\n'
+        if '*/' in line:
+            line = line.split('*/',2)[1]+'\n'
         if 'date' in line:
             line = line.replace('-', '')
         if ' .' in line:  # in Trial
@@ -277,6 +279,13 @@ def readPFile(filename, ptype, outfmt=''):
                             curvepainter[icurve]['Curve']['RawData']['Points']=pts
         logging.info('post-processing dict for Points in plan.Trial done')
 
+    # in some rare cases, SSD, AvgSSD, are not numbers, make them blank to avoid datatype conversion issue
+        beams = yobj['Trial']['BeamList']['Beam']
+        for bm in beams:
+            if not bm['SSD'].isnumeric():
+                bm['SSD'] = '0'
+            if not bm['AvgSSD'].isnumeric():
+                bm['AvgSSD'] = '0'
 
     if outfmt == 'dict':
         return yobj

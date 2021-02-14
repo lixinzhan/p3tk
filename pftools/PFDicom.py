@@ -669,8 +669,13 @@ class PFDicom():
                 prescription = presc
         
         binary_number = beam.DoseVolume.split(':')[1][:-1]
+        binary_file = 'plan.Trial.binary.%s' % str(binary_number).zfill(3)
+        file_size = os.path.getsize('%s/Plan_%s/%s' % (self.PFPath, self.PlanID, binary_file))
         beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
         beam_mu = self._getBeamMU(beam)
+        print('%12s --> %s: plan.Trial.binary.%s has size %s' % (
+            beam.Name, beam.DoseVolume, binary_file, file_size 
+        ))
         print('%12s --> Fracs: %s, presc_dose %8.3f, MU: %8.3f' % (
             beam.Name, prescription.NumberOfFractions, 
             beam_presc_dose, beam_mu))
@@ -1103,21 +1108,28 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
-    #pfDicom = PFDicom('/home/lzhan/PinnBackup/Institution_48/Mount_0/Patient_4604/')
-    
-    for imgset in pfDicom.Patient.ImageSetList.ImageSet:
-        pfDicom.createDicomCT(imgset.ImageSetID)
-        print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
-    
-    for plan in pfDicom.Patient.PlanList.Plan:
-        pfDicom.createDicomRS(plan.PlanID)
-        print('DICOM RTStruct_%s created!' % plan.PlanID)
+    # pfDicom = PFDicom(prjpath+'examples/Patient_6204')
+    pfPath = '/home/lzhan/PinnBackup/Institution_207/Mount_0/Patient_12395/'
+    pfDicom = PFDicom(pfPath)
+    pfDicom._initializeForDicom('RD', 2)
 
-    for plan in pfDicom.Patient.PlanList.Plan:
-        pfDicom.createDicomRD(plan.PlanID)
-        print('DICOM RD for Plan_%s created!' % plan.PlanID)
+    for beam in pfDicom.PlanTrial.Trial.BeamList.Beam:
+        binary_name = '%s/Plan_2/plan.Trial.binary.%s' % (pfPath, beam.DoseVolume.split(':')[1][:-1].zfill(3))
+        binary_size = os.path.getsize(binary_name)
+        print('%12s --> %s, binary_file: %s, size: %s' % (
+            beam.Name, beam.DoseVolume, binary_name, binary_size))    
+    # for imgset in pfDicom.Patient.ImageSetList.ImageSet:
+    #     pfDicom.createDicomCT(imgset.ImageSetID)
+    #     print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
+    
+    # for plan in pfDicom.Patient.PlanList.Plan:
+    #     pfDicom.createDicomRS(plan.PlanID)
+    #     print('DICOM RTStruct_%s created!' % plan.PlanID)
 
-    for plan in pfDicom.Patient.PlanList.Plan:
-        pfDicom.createDicomRP(plan.PlanID)
-        print('DICOM RP for Plan_%s created!' % plan.PlanID)
+    # for plan in pfDicom.Patient.PlanList.Plan:
+    #     pfDicom.createDicomRD(plan.PlanID)
+    #     print('DICOM RD for Plan_%s created!' % plan.PlanID)
+
+    # for plan in pfDicom.Patient.PlanList.Plan:
+    #     pfDicom.createDicomRP(plan.PlanID)
+    #     print('DICOM RP for Plan_%s created!' % plan.PlanID)
