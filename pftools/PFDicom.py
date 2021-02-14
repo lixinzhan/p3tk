@@ -544,7 +544,10 @@ class PFDicom():
         for poi in self.PlanPoints.Poi:            
             roi_number += 1
             ds_roicontour = Dataset()
-            ds_roicontour.ROIDisplayColor = PFColor(poi.Color).getRGB()
+            try:
+                ds_roicontour.ROIDisplayColor = PFColor(poi.Color).getRGB()
+            except:
+                ds_roicontour.ROIDisplayColor = PFColor('yellow').getRGB()
             ds_roicontour.ReferencedROINumber = roi_number
             ds_roicontour.ContourSequence = self._getContourSequence(poi, ctype='POINT')
             seq.append(ds_roicontour)
