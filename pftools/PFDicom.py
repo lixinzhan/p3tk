@@ -663,8 +663,8 @@ class PFDicom():
     def _getBeamDose(self, beam) -> np.array:
         import struct
 
-        prescription = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
-        for presc in self.PlanTrial.Trial.PrescriptionList.Prescription:
+        prescription = self.PlanTrial.Trial[0].PrescriptionList.Prescription[0]
+        for presc in self.PlanTrial.Trial[0].PrescriptionList.Prescription:
             if presc.Name == beam.PrescriptionName:
                 prescription = presc
         
@@ -693,15 +693,15 @@ class PFDicom():
         return np.array(data_block, dtype=float)
 
     def _setDoseImageModule(self, ds):
-        x_orig = self.PlanTrial.Trial.DoseGridOriginX
-        y_orig = self.PlanTrial.Trial.DoseGridOriginY
-        z_orig = self.PlanTrial.Trial.DoseGridOriginZ
-        dx = self.PlanTrial.Trial.DoseGridVoxelSizeX
-        dy = self.PlanTrial.Trial.DoseGridVoxelSizeY
-        dz = self.PlanTrial.Trial.DoseGridVoxelSizeZ
-        nx = self.PlanTrial.Trial.DoseGridDimensionX
-        ny = self.PlanTrial.Trial.DoseGridDimensionY
-        nz = self.PlanTrial.Trial.DoseGridDimensionZ
+        x_orig = self.PlanTrial.Trial[0].DoseGridOriginX
+        y_orig = self.PlanTrial.Trial[0].DoseGridOriginY
+        z_orig = self.PlanTrial.Trial[0].DoseGridOriginZ
+        dx = self.PlanTrial.Trial[0].DoseGridVoxelSizeX
+        dy = self.PlanTrial.Trial[0].DoseGridVoxelSizeY
+        dz = self.PlanTrial.Trial[0].DoseGridVoxelSizeZ
+        nx = self.PlanTrial.Trial[0].DoseGridDimensionX
+        ny = self.PlanTrial.Trial[0].DoseGridDimensionY
+        nz = self.PlanTrial.Trial[0].DoseGridDimensionZ
         # Shift applied to y. Probably ref orig is at different side of the dose region for Y.
         [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig])
         # print('orig: ', [x_orig,y_orig,z_orig], 'new: ', [x0,y0,z0])
@@ -727,7 +727,7 @@ class PFDicom():
         # self.SliceLocation = ''
 
         totaldose = np.zeros(nx*ny*nz, dtype=float)
-        for beam in self.PlanTrial.Trial.BeamList.Beam:
+        for beam in self.PlanTrial.Trial[0].BeamList.Beam:
             beamdose = self._getBeamDose(beam)
             if len(beamdose) != nx*ny*nz:
                 logging.error('Beam %s has mismatching dose grid!' % beam.Name)
@@ -740,7 +740,7 @@ class PFDicom():
         scaleddose = totaldose.astype(np.int32)
         smallestImagePixelValue = np.amin(scaleddose)
         largestImagePixelValue  = np.amax(scaleddose)
-        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        presc = self.PlanTrial.Trial[0].PrescriptionList.Prescription[0]
         presc_dose = presc.PrescriptionDose
         presc_frac = presc.NumberOfFractions
         print('Prescription: %s/%s' % (presc_dose, presc_frac))
@@ -766,8 +766,8 @@ class PFDicom():
         return seq
 
     def _setRTDoseModule(self, ds):
-        ds.ContentDate = self.PlanTrial.Trial.ObjectVersion.WriteTimeStamp.split(' ')[0].replace('-','')
-        ds.ContentTime = self.PlanTrial.Trial.ObjectVersion.WriteTimeStamp.split(' ')[1].replace(':','')
+        ds.ContentDate = self.PlanTrial.Trial[0].ObjectVersion.WriteTimeStamp.split(' ')[0].replace('-','')
+        ds.ContentTime = self.PlanTrial.Trial[0].ObjectVersion.WriteTimeStamp.split(' ')[1].replace(':','')
         ds.InstanceNumber = self.Patient.MedicalRecordNumber[-2:]+str(self.ImageSetID)+str(self.PlanID)
         ds.SamplesPerPixel = 1
         ds.PhotometricInterpretation = 'MONOCHROME2 '
@@ -830,7 +830,7 @@ class PFDicom():
     
     def _getDoseReferenceSequence(self):
         seq = pydicom.sequence.Sequence()
-        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        presc = self.PlanTrial.Trial[0].PrescriptionList.Prescription[0]
         ds_presc = Dataset()
         ds_presc.DoseReferenceNumber = '1'
         ds_presc.DoseReferenceStructureType = 'SITE'
@@ -879,7 +879,7 @@ class PFDicom():
     def _getReferencedBeamSequence(self):
         seq = pydicom.sequence.Sequence()
         beam_number = 0
-        for beam in self.PlanTrial.Trial.BeamList.Beam:
+        for beam in self.PlanTrial.Trial[0].BeamList.Beam:
             beam_number += 1
             ds_beam = Dataset()
             beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
@@ -899,9 +899,9 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ds_frac = Dataset()
         ds_frac.FractionGroupNumber = self.PlanID
-        presc = self.PlanTrial.Trial.PrescriptionList.Prescription[0]
+        presc = self.PlanTrial.Trial[0].PrescriptionList.Prescription[0]
         ds_frac.NumberOfFractionsPlanned = presc.NumberOfFractions
-        ds_frac.NumberOfBeams = len(self.PlanTrial.Trial.BeamList.Beam)
+        ds_frac.NumberOfBeams = len(self.PlanTrial.Trial[0].BeamList.Beam)
         ds_frac.NumberOfBrachyApplicationSetups = '0'
         ds_frac.ReferencedBeamSequence = self._getReferencedBeamSequence()
         seq.append(ds_frac)
@@ -1006,7 +1006,7 @@ class PFDicom():
     def _setRTBeamsModule(self, ds): # The most important module ?
         ds.BeamSequence = pydicom.sequence.Sequence()
         beam_idx = 0
-        for beam in self.PlanTrial.Trial.BeamList.Beam:
+        for beam in self.PlanTrial.Trial[0].BeamList.Beam:
             beam_idx += 1
             ds_bm = Dataset()
             ds_bm.Manufacturer = dcmcommon.TreatDeviceManufacturer
@@ -1108,28 +1108,29 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, filename=prjpath+'logs/test.log', level=logging.INFO)
 
     print('Start creating DICOM Files ...')
-    # pfDicom = PFDicom(prjpath+'examples/Patient_6204')
-    pfPath = '/home/lzhan/PinnBackup/Institution_207/Mount_0/Patient_12395/'
-    pfDicom = PFDicom(pfPath)
-    pfDicom._initializeForDicom('RD', 2)
+    pfDicom = PFDicom(prjpath+'examples/Patient_6204')
+    # pfPath = '/home/lzhan/PinnBackup/Institution_207/Mount_0/Patient_12395/'
+    # pfDicom = PFDicom(pfPath)
+    # pfDicom._initializeForDicom('RD', 2)
 
-    for beam in pfDicom.PlanTrial.Trial.BeamList.Beam:
-        binary_name = '%s/Plan_2/plan.Trial.binary.%s' % (pfPath, beam.DoseVolume.split(':')[1][:-1].zfill(3))
-        binary_size = os.path.getsize(binary_name)
-        print('%12s --> %s, binary_file: %s, size: %s' % (
-            beam.Name, beam.DoseVolume, binary_name, binary_size))    
-    # for imgset in pfDicom.Patient.ImageSetList.ImageSet:
-    #     pfDicom.createDicomCT(imgset.ImageSetID)
-    #     print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
+    # for beam in pfDicom.PlanTrial.Trial[0].BeamList.Beam:
+    #     binary_name = '%s/Plan_2/plan.Trial.binary.%s' % (pfPath, beam.DoseVolume.split(':')[1][:-1].zfill(3))
+    #     binary_size = os.path.getsize(binary_name)
+    #     print('%12s --> %s, binary_file: %s, size: %s' % (
+    #         beam.Name, beam.DoseVolume, binary_name, binary_size))    
+
+    for imgset in pfDicom.Patient.ImageSetList.ImageSet:
+        pfDicom.createDicomCT(imgset.ImageSetID)
+        print('DICOM ImageSet_%s created!' % imgset.ImageSetID) 
     
-    # for plan in pfDicom.Patient.PlanList.Plan:
-    #     pfDicom.createDicomRS(plan.PlanID)
-    #     print('DICOM RTStruct_%s created!' % plan.PlanID)
+    for plan in pfDicom.Patient.PlanList.Plan:
+        pfDicom.createDicomRS(plan.PlanID)
+        print('DICOM RTStruct_%s created!' % plan.PlanID)
 
-    # for plan in pfDicom.Patient.PlanList.Plan:
-    #     pfDicom.createDicomRD(plan.PlanID)
-    #     print('DICOM RD for Plan_%s created!' % plan.PlanID)
+    for plan in pfDicom.Patient.PlanList.Plan:
+        pfDicom.createDicomRD(plan.PlanID)
+        print('DICOM RD for Plan_%s created!' % plan.PlanID)
 
-    # for plan in pfDicom.Patient.PlanList.Plan:
-    #     pfDicom.createDicomRP(plan.PlanID)
-    #     print('DICOM RP for Plan_%s created!' % plan.PlanID)
+    for plan in pfDicom.Patient.PlanList.Plan:
+        pfDicom.createDicomRP(plan.PlanID)
+        print('DICOM RP for Plan_%s created!' % plan.PlanID)

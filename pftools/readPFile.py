@@ -27,13 +27,6 @@ import yaml
 from yaml.loader import FullLoader, BaseLoader
 from copy import deepcopy
 
-class PFObj(object):
-    def __init__(self, dict_):
-        self.__dict__.update(dict_)
-
-def dict2obj(d):
-    return json.loads(json.dumps(d), object_hook=PFObj)
-
 def _processPFMachine(text):
     rm_start = False
     rm_end = True
@@ -91,7 +84,7 @@ def readPFile(filename, ptype, outfmt=''):
     elif ptype == 'ImageSet.ImageInfo':
         strlist = ['ImageInfo ={']
     elif ptype == 'plan.Trial':
-        strlist = ['Prescription ={', 'Beam ={', 'CPManagerObject ={', 
+        strlist = ['Trial ={', 'Prescription ={', 'Beam ={', 'CPManagerObject ={', 
                     'FilmImage ={', 'BeamModifier ={', 'CurvePainter ={']
     elif ptype == 'plan.Machine':
         strlist = ['MachineEnergy ={']
@@ -215,14 +208,10 @@ def readPFile(filename, ptype, outfmt=''):
 
 
     ################################################
-    # convert to python dict from yaml
-    if outfmt == 'dict':
-        yobj = yaml.load(ystr, Loader=BaseLoader)
-    else:
-        yobj = yaml.load(ystr, Loader=FullLoader)
-    # print(yobj['Trial']['PrescriptionList']['Prescription'][0]['Color'])
-    #print(yobj['Trial'])
-    logging.info('yaml loaded as dict')
+    # convert to python dict from yaml. All values are string for BaseLoader
+    yobj = yaml.load(ystr, Loader=BaseLoader)
+    # yobj = yaml.load(ystr, Loader=FullLoader)
+    logging.info('yaml loaded as dict, with values all been string.')
 
     ################################################
     # Points in plan.rio are not fully done. Convert to list here
@@ -237,64 +226,59 @@ def readPFile(filename, ptype, outfmt=''):
                 yobj['roi'].pop(iroi)
         
         logging.info('post-processing dict for Points in plan.roi done')
-    #print(yobj['roi'][1]['curve'][0]['points'])
+    
     ################################################
     # Points in plan.Trial not fully done yet. Convert to list here
     if ptype == 'plan.Trial':
         # Trial.BeamList.Beam[].CPManager.CPManagerObject[].ControlPointList.ControlPoint[].ModifierList.BeamModifier[].ContourList.CurvePainter.Curve.RawData.Points
         # Trial.BeamList.Beam[].CPManager.CPManagerObject[].ControlPointList.ControlPoint[].MLCLeafPositions.RawData.Points
-        beam = yobj['Trial']['BeamList']['Beam']
-        nbeams = len(beam)
-        for ibeam in range(nbeams):
-            if 'CPManagerObject' not in beam[ibeam]['CPManager']:
-                cpmObject = beam[ibeam]['CPManager']
-                yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'] = [ deepcopy(cpmObject) ]
-            cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
-            ncpmObject = len(cpmObject)
+        for itr in range(len(yobj['Trial'])):
+            beam = yobj['Trial'][itr]['BeamList']['Beam']
+            nbeams = len(beam)
+            for ibeam in range(nbeams):
+                if 'CPManagerObject' not in beam[ibeam]['CPManager']:
+                    cpmObject = beam[ibeam]['CPManager']
+                    yobj['Trial'][itr]['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'] = [ deepcopy(cpmObject) ]
+                cpmObject = beam[ibeam]['CPManager']['CPManagerObject']
+                ncpmObject = len(cpmObject)
 
-            for icpm in range(ncpmObject):
-                cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
-                cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
-                ncpts = len(cpts)
-                for icpts in range(ncpts):
-                    leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
-                    cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
-                    #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
-                    # adding in missing part in some plan.Trial
-                    if cpts[icpts]['ModifierList'] is None or cpts[icpts]['ModifierList'] == '':                        
-                        cpts[icpts]['ModifierList'] = {'BeamModifier':[{'Name':'', 'ContourList': None}]}
-                    modifier = cpts[icpts]['ModifierList']['BeamModifier']
-                    nmodifier = len(modifier)
-                    for imodifier in range(nmodifier):
-                        if modifier[imodifier]['ContourList'] is None or modifier[imodifier]['ContourList']=='':
-                            continue # electron cases (or some other cases too?)
-                        # print('modifier %s --> %s' % (imodifier, modifier[imodifier]))
-                        # print('contourlist --> %s' % modifier[imodifier]['ContourList'])
-                        # print('curvepainter--> %s' % modifier[imodifier]['ContourList']['CurvePainter'])
-                        curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
-                        ncurvepainter = len(curvepainter)
-                        for icurve in range(ncurvepainter):
-                            pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
-                            #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
-                            curvepainter[icurve]['Curve']['RawData']['Points']=pts
-        logging.info('post-processing dict for Points in plan.Trial done')
+                for icpm in range(ncpmObject):
+                    cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
+                    cpts = cpmObject[icpm]['ControlPointList']['ControlPoint']
+                    ncpts = len(cpts)
+                    for icpts in range(ncpts):
+                        leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
+                        cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                        #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
+                        # adding in missing part in some plan.Trial
+                        if cpts[icpts]['ModifierList'] is None or cpts[icpts]['ModifierList'] == '':                        
+                            cpts[icpts]['ModifierList'] = {'BeamModifier':[{'Name':'', 'ContourList': None}]}
+                        modifier = cpts[icpts]['ModifierList']['BeamModifier']
+                        nmodifier = len(modifier)
+                        for imodifier in range(nmodifier):
+                            if modifier[imodifier]['ContourList'] is None or modifier[imodifier]['ContourList']=='':
+                                continue # electron cases (or some other cases too?)
+                            # print('modifier %s --> %s' % (imodifier, modifier[imodifier]))
+                            # print('contourlist --> %s' % modifier[imodifier]['ContourList'])
+                            # print('curvepainter--> %s' % modifier[imodifier]['ContourList']['CurvePainter'])
+                            curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
+                            ncurvepainter = len(curvepainter)
+                            for icurve in range(ncurvepainter):
+                                pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
+                                #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
+                                curvepainter[icurve]['Curve']['RawData']['Points']=pts
+            logging.info('post-processing dict for Points in plan.Trial done')
 
-    # in some rare cases, SSD, AvgSSD, are not numbers, make them blank to avoid datatype conversion issue
-        beams = yobj['Trial']['BeamList']['Beam']
-        for bm in beams:
-            if not bm['SSD'].isnumeric():
-                bm['SSD'] = '0'
-            if not bm['AvgSSD'].isnumeric():
-                bm['AvgSSD'] = '0'
+        # in some rare cases, SSD, AvgSSD, are not numbers, make them blank to avoid datatype conversion issue
+            beams = yobj['Trial'][itr]['BeamList']['Beam']
+            for bm in beams:
+                if not bm['SSD'].isnumeric():
+                    bm['SSD'] = '0'
+                if not bm['AvgSSD'].isnumeric():
+                    bm['AvgSSD'] = '0'
 
-    if outfmt == 'dict':
-        return yobj
-
-    ################################################
-    # convert to python obj type
-    pystruct = dict2obj(yobj)
-    logging.info(filename + ' is a Python Object now.\n')
-    return pystruct
+    # outfmt == 'dict'
+    return yobj
 
 if __name__ == '__main__':
     prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'

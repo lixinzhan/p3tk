@@ -25,7 +25,7 @@ class _ContourList(BaseModel):
     CurvePainter: List[_CurvePainter] = None
 
 class _BeamModifier(BaseModel):
-    Name: str
+    Name = ''
     FixToCollimator: Optional[int]
     AutoBlock: Optional[int]
     StructureToBlock = ''
@@ -35,10 +35,10 @@ class _BeamModifier(BaseModel):
     ContourList: Optional[_ContourList] = None
 
 class _ModifierList(BaseModel):
-    BeamModifier: List[_BeamModifier]
+    BeamModifier: List[_BeamModifier] = None
 
 class _WedgeContext(BaseModel):
-    WedgeName: str
+    WedgeName = ''
     Orientation = ''
     OffsetOrigin = ''
     OffsetDistance: Optional[float]
@@ -156,7 +156,7 @@ class _BeamList(BaseModel):
     Beam: List[_Beam] = None
 
 class _Prescription(BaseModel):
-    Name: str
+    Name = ''
     RequestedMonitorUnitsPerFraction: Optional[float]
     PrescriptionDose: float
     PrescriptionPercent: Optional[float]
@@ -190,7 +190,7 @@ class _Trial(BaseModel):
     ObjectVersion: Optional[_ObjectVersion] = None
 
 class PFPlanTrial(BaseModel):
-    Trial: Optional[_Trial] = None
+    Trial: List[_Trial] = None
 
 def readPlanTrial(pfpath, planid=0):
     fname = '%s/Plan_%s/plan.Trial' % (pfpath, planid)
@@ -215,21 +215,25 @@ if __name__ == '__main__':
     #print(len(Pdict))
     pfPlanTrial = PFPlanTrial(**Pdict)
 
-    print(pfPlanTrial.Trial.Name)
-    print(pfPlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose)
-    print(pfPlanTrial.Trial.BeamList.Beam[0].Name)
-    cpmgr0 = pfPlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
-    print(cpmgr0.NumberOfControlPoints)
-    print(cpmgr0.ControlPointList.ControlPoint[0].Gantry)
-    print(cpmgr0.ControlPointList.ControlPoint[0].WedgeContext.WedgeName)
-    cp0 = cpmgr0.ControlPointList.ControlPoint[0]
-    print(cp0.ModifierList.BeamModifier[0].Name)
-    print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.NumberOfPoints)
-    print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[1])
-    print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[23])
-    print(cp0.MLCLeafPositions.RawData.NumberOfPoints)
-    print(cp0.MLCLeafPositions.RawData.Points[27])
-    print(cpmgr0.JawsConformance)
-    print(pfPlanTrial.Trial.BeamList.Beam[0].Bolus.Type)
-    print(pfPlanTrial.Trial.BeamList.Beam[0].Compensator.Name)    
-    print(pfPlanTrial.Trial.BeamList.Beam[3].MonitorUnitInfo.PrescriptionDose)
+    ntrial = len(pfPlanTrial.Trial)
+    print('Number of Trials: %s' % ntrial)
+
+    for i in range(ntrial):
+        print(pfPlanTrial.Trial[i].Name)
+        print(pfPlanTrial.Trial[i].PrescriptionList.Prescription[0].PrescriptionDose)
+        print(pfPlanTrial.Trial[i].BeamList.Beam[0].Name)
+        cpmgr0 = pfPlanTrial.Trial[i].BeamList.Beam[0].CPManager.CPManagerObject[0]
+        print(cpmgr0.NumberOfControlPoints)
+        print(cpmgr0.ControlPointList.ControlPoint[0].Gantry)
+        print(cpmgr0.ControlPointList.ControlPoint[0].WedgeContext.WedgeName)
+        cp0 = cpmgr0.ControlPointList.ControlPoint[0]
+        print(cp0.ModifierList.BeamModifier[0].Name)
+        print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.NumberOfPoints)
+        print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[1])
+        print(cp0.ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[23])
+        print(cp0.MLCLeafPositions.RawData.NumberOfPoints)
+        print(cp0.MLCLeafPositions.RawData.Points[27])
+        print(cpmgr0.JawsConformance)
+        print(pfPlanTrial.Trial[i].BeamList.Beam[0].Bolus.Type)
+        print(pfPlanTrial.Trial[i].BeamList.Beam[0].Compensator.Name)    
+        print(pfPlanTrial.Trial[i].BeamList.Beam[3].MonitorUnitInfo.PrescriptionDose)

@@ -13,15 +13,15 @@ Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Trial',
 pfPlanTrial_0 = PFPlanTrial(**Pdict)
 
 def test0_PFPlanTrial():
-    cpmgr0 = pfPlanTrial_0.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_0.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     assert(
-        pfPlanTrial_0.Trial.Name,
-        pfPlanTrial_0.Trial.PrescriptionList.Prescription[0].PrescriptionDose,
-        pfPlanTrial_0.Trial.BeamList.Beam[0].Name,
-        pfPlanTrial_0.Trial.BeamList.Beam[0].Bolus.Type,
-        pfPlanTrial_0.Trial.BeamList.Beam[0].Compensator.Name,
-        pfPlanTrial_0.Trial.BeamList.Beam[3].MonitorUnitInfo.PrescriptionDose
+        pfPlanTrial_0.Trial[0].Name,
+        pfPlanTrial_0.Trial[0].PrescriptionList.Prescription[0].PrescriptionDose,
+        pfPlanTrial_0.Trial[0].BeamList.Beam[0].Name,
+        pfPlanTrial_0.Trial[0].BeamList.Beam[0].Bolus.Type,
+        pfPlanTrial_0.Trial[0].BeamList.Beam[0].Compensator.Name,
+        pfPlanTrial_0.Trial[0].BeamList.Beam[3].MonitorUnitInfo.PrescriptionDose
     ) == (
         'sMLC',
         4250.0,
@@ -32,7 +32,7 @@ def test0_PFPlanTrial():
     )
 
 def test0_PFPlanTrial_CP():
-    cpmgr0 = pfPlanTrial_0.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_0.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     assert(
         cpmgr0.NumberOfControlPoints,
@@ -51,7 +51,7 @@ def test0_PFPlanTrial_CP():
     )
 
 def test0_PFPlanTrial_BM():
-    cpmgr0 = pfPlanTrial_0.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_0.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     bm0 = cp0.ModifierList.BeamModifier[0]
     assert(
@@ -72,15 +72,15 @@ Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_1/plan.Trial',
 pfPlanTrial_1 = PFPlanTrial(**Pdict)
 
 def test1_PFPlanTrial():
-    cpmgr0 = pfPlanTrial_1.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_1.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     assert(
-        pfPlanTrial_1.Trial.Name,
-        pfPlanTrial_1.Trial.PrescriptionList.Prescription[0].PrescriptionDose,
-        pfPlanTrial_1.Trial.BeamList.Beam[0].Name,
-        pfPlanTrial_1.Trial.BeamList.Beam[0].Bolus.Type,
-        pfPlanTrial_1.Trial.BeamList.Beam[0].Compensator.Name,
-        pfPlanTrial_1.Trial.BeamList.Beam[0].MonitorUnitInfo.PrescriptionDose
+        pfPlanTrial_1.Trial[0].Name,
+        pfPlanTrial_1.Trial[0].PrescriptionList.Prescription[0].PrescriptionDose,
+        pfPlanTrial_1.Trial[0].BeamList.Beam[0].Name,
+        pfPlanTrial_1.Trial[0].BeamList.Beam[0].Bolus.Type,
+        pfPlanTrial_1.Trial[0].BeamList.Beam[0].Compensator.Name,
+        pfPlanTrial_1.Trial[0].BeamList.Beam[0].MonitorUnitInfo.PrescriptionDose
     ) == (
         'Direct Electron',
         1250.0,
@@ -91,7 +91,7 @@ def test1_PFPlanTrial():
     )
 
 def test1_PFPlanTrial_CP():
-    cpmgr0 = pfPlanTrial_1.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_1.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     assert(
         cpmgr0.NumberOfControlPoints,
@@ -110,7 +110,7 @@ def test1_PFPlanTrial_CP():
     )
 
 def test1_PFPlanTrial_BM():
-    cpmgr0 = pfPlanTrial_1.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0]
+    cpmgr0 = pfPlanTrial_1.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
     cp0 = cpmgr0.ControlPointList.ControlPoint[0]
     bm0 = cp0.ModifierList.BeamModifier[0]
     assert(

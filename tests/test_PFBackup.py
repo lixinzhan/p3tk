@@ -22,9 +22,9 @@ def test0_PFPFBackup():
     )
 
 def test1_PFBackup():
-    assert(pfBackup.Plan[0].PlanTrial.Trial.Name,
+    assert(pfBackup.Plan[0].PlanTrial.Trial[0].Name,
             pfBackup.Plan[0].PlanID,
-            pfBackup.Plan[1].PlanTrial.Trial.Name,
+            pfBackup.Plan[1].PlanTrial.Trial[0].Name,
             pfBackup.Plan[1].PlanID
     ) == (
         'sMLC',
