@@ -648,60 +648,65 @@ class PFDicom():
         return calib_dose_per_mu
 
     def _getBeamMU(self, beam):
-        beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
+        beam_frac_dose = beam.MonitorUnitInfo.PrescriptionDose
         beam_rof = beam.MonitorUnitInfo.CollimatorOutputFactor
         calib_dose_per_mu = self._getDosePerMuAtCalib(beam)
         norm_dose = beam.MonitorUnitInfo.NormalizedDose
         if norm_dose == 0 or beam_rof == 0 or calib_dose_per_mu == 0:
             beam_mu = 0
         else:
-            beam_mu = beam_presc_dose /(norm_dose * beam_rof * calib_dose_per_mu)
+            beam_mu = beam_frac_dose /(norm_dose * beam_rof * calib_dose_per_mu)
         # print('--> Dose/MU @calib: %s, beam_mu %s' % (calib_dose_per_mu, beam_mu))
         return beam_mu
 
 
-    def _getBeamDose(self, beam) -> np.array:
+    def _getBeamDosePerFrac(self, beam) -> np.array:
         import struct
-
-        prescription = self.PlanTrial.Trial[0].PrescriptionList.Prescription[0]
-        for presc in self.PlanTrial.Trial[0].PrescriptionList.Prescription:
-            if presc.Name == beam.PrescriptionName:
-                prescription = presc
+        data_block = []
+        # trial = self.PlanTrial.Trial[0]
+        # # if 'images' in trial.Name.lower():
+        # #     continue
+        # prescription = trial.PrescriptionList.Prescription[0]
+        # for presc in trial.PrescriptionList.Prescription:
+        #     if presc.Name == beam.PrescriptionName:
+        #         prescription = presc
         
         binary_number = beam.DoseVolume.split(':')[1][:-1]
         binary_file = 'plan.Trial.binary.%s' % str(binary_number).zfill(3)
         file_size = os.path.getsize('%s/Plan_%s/%s' % (self.PFPath, self.PlanID, binary_file))
-        beam_presc_dose = beam.MonitorUnitInfo.PrescriptionDose
+        beam_frac_dose = beam.MonitorUnitInfo.PrescriptionDose
         beam_mu = self._getBeamMU(beam)
         print('%12s --> %s: plan.Trial.binary.%s has size %s' % (
             beam.Name, beam.DoseVolume, binary_file, file_size 
         ))
-        print('%12s --> Fracs: %s, presc_dose %8.3f, MU: %8.3f' % (
-            beam.Name, prescription.NumberOfFractions, 
-            beam_presc_dose, beam_mu))
-        data_block = []
+        print('%12s --> frac_dose %8.3f, MU: %8.3f' % (
+            beam.Name, beam_frac_dose, beam_mu))
         binary_file = '%s/Plan_%s/plan.Trial.binary.%s' % (self.PFPath, self.PlanID, str(binary_number).zfill(3))
         with open(binary_file, 'rb') as bfile:
             data_element = bfile.read(4)
             while data_element:
                 v_raw = struct.unpack(">f", data_element)[0]
                 # v_cnv = v_raw * prescription.NumberOfFractions * beam_presc_dose / 100
-                v_cnv = v_raw * prescription.NumberOfFractions * self._getBeamMU(beam) / 100
+                v_cnv = v_raw * self._getBeamMU(beam) / 100
                 data_block.append(v_cnv)
                 data_element = bfile.read(4)
 
         return np.array(data_block, dtype=float)
 
     def _setDoseImageModule(self, ds):
-        x_orig = self.PlanTrial.Trial[0].DoseGridOriginX
-        y_orig = self.PlanTrial.Trial[0].DoseGridOriginY
-        z_orig = self.PlanTrial.Trial[0].DoseGridOriginZ
-        dx = self.PlanTrial.Trial[0].DoseGridVoxelSizeX
-        dy = self.PlanTrial.Trial[0].DoseGridVoxelSizeY
-        dz = self.PlanTrial.Trial[0].DoseGridVoxelSizeZ
-        nx = self.PlanTrial.Trial[0].DoseGridDimensionX
-        ny = self.PlanTrial.Trial[0].DoseGridDimensionY
-        nz = self.PlanTrial.Trial[0].DoseGridDimensionZ
+        # assumes only one trial is for RT dose. The others are for imaging/setup etc.
+        trial = self.PlanTrial.Trial[0]
+        if 'imaging' in trial.Name.lower():
+            print('Error: Trial_0 is for imaging only')
+        x_orig = trial.DoseGridOriginX
+        y_orig = trial.DoseGridOriginY
+        z_orig = trial.DoseGridOriginZ
+        dx = trial.DoseGridVoxelSizeX
+        dy = trial.DoseGridVoxelSizeY
+        dz = trial.DoseGridVoxelSizeZ
+        nx = trial.DoseGridDimensionX
+        ny = trial.DoseGridDimensionY
+        nz = trial.DoseGridDimensionZ
         # Shift applied to y. Probably ref orig is at different side of the dose region for Y.
         [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig])
         # print('orig: ', [x_orig,y_orig,z_orig], 'new: ', [x0,y0,z0])
@@ -709,7 +714,7 @@ class PFDicom():
         dy = dy * 10
         dz = dz * 10 
         ds.PixelSpacing = [dx, dy]
-        ds.SliceThickness = None                    # dz ***************
+        ds.SliceThickness = None         # dz ***************
         ds.Rows = ny
         ds.Columns = nx
         ds.NumberOfFrames = nz
@@ -733,7 +738,7 @@ class PFDicom():
                 logging.error('Beam %s has mismatching dose grid!' % beam.Name)
                 print('Beam %s has mismatching dose grid' % beam.Name)
             else:
-                totaldose += beamdose
+                totaldose = totaldose + beamdose * fractions
 
         ds.DoseGridScaling = 1.0e-6
         totaldose = totaldose/ds.DoseGridScaling
