@@ -6,6 +6,7 @@ venv/pyvenv.cfg
 log/*
 00003030/
 00002785/
+12395
 DICOM.create/
 examples/Patient_4604/ImageSet_0.img
 

@@ -22,3 +22,5 @@ ConvolutionKernel = ''
 WindowCenter = 20
 WindowWidth = 400
 
+debug = True
+

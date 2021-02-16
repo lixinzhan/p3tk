@@ -104,6 +104,21 @@ class _Bolus(BaseModel):
 class _Compensator(BaseModel):
     Name = ''
 
+class _Prescription(BaseModel):
+    Name = ''
+    RequestedMonitorUnitsPerFraction: Optional[float]
+    PrescriptionDose: float
+    PrescriptionPercent: Optional[float]
+    NumberOfFractions: int
+    PrescriptionPoint = ''
+    Method = ''
+    NormalizationMethod = ''
+    PrescriptionPeriod = ''
+    WeightsProportionalTo = ''
+
+class _PrescriptionList(BaseModel):
+    Prescription: List[_Prescription] = None
+
 class _Beam(BaseModel):
       Name: str
       IsocenterName = ''
@@ -151,24 +166,14 @@ class _Beam(BaseModel):
       MonitorUnitInfo: Optional[_MonitorUnitInfo] = None
       DoseVolume = ''
 
+      # added extra Prescription property for easy link
+      Prescription: Optional[_Prescription] = None
+      # flag to be used for removing extra beams
+      Removable = False
+
 
 class _BeamList(BaseModel):
     Beam: List[_Beam] = None
-
-class _Prescription(BaseModel):
-    Name = ''
-    RequestedMonitorUnitsPerFraction: Optional[float]
-    PrescriptionDose: float
-    PrescriptionPercent: Optional[float]
-    NumberOfFractions: int
-    PrescriptionPoint = ''
-    Method = ''
-    NormalizationMethod = ''
-    PrescriptionPeriod = ''
-    WeightsProportionalTo = ''
-
-class _PrescriptionList(BaseModel):
-    Prescription: List[_Prescription] = None
 
 class _Trial(BaseModel):
     Name: str
@@ -188,6 +193,10 @@ class _Trial(BaseModel):
     PrescriptionList: Optional[_PrescriptionList] = None
     BeamList: Optional[_BeamList]
     ObjectVersion: Optional[_ObjectVersion] = None
+
+    # added in items
+    Removable = False
+    TrialID: Optional[int]
 
 class PFPlanTrial(BaseModel):
     Trial: List[_Trial] = None
