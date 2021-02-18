@@ -121,10 +121,7 @@ class PFDicom():
             self._linkPrescriptionToBeam()
             self._splitTrialOnPrescription()
 
-        # self._generateUIDs()
-
-        # yyyy-mm-dd to yyyymmdd   
-        img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
+        # yyyy-mm-dd to yyyymmdd        
         self.ScanDate = self.ImgSetHeader.date.split()[0].replace('-','')
 
         # prepare for coordinate transformation
@@ -275,6 +272,10 @@ class PFDicom():
     # make each beam contains the correct prescription info
     def _linkPrescriptionToBeam(self):
         for trial in self.PlanTrial.Trial:
+            # remove trials with no beams
+            if trial.BeamList.Beam is None:
+                self.PlanTrial.Trial.remove(trial)
+                continue
             for beam in trial.BeamList.Beam:
                 for presc in trial.PrescriptionList.Prescription:
                     if beam.PrescriptionName == presc.Name:

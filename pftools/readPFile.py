@@ -229,7 +229,11 @@ def readPFile(filename, ptype, outfmt=''):
     # Points in plan.Trial not fully done yet. Convert to list here
     if ptype == 'plan.Trial':
         for itr in range(len(yobj['Trial'])):
-            beam = yobj['Trial'][itr]['BeamList']['Beam']
+            try:
+                beam = yobj['Trial'][itr]['BeamList']['Beam']
+            except:
+                print("*** Fatal Error: No beam in trial %s" % yobj['Trial'][itr]['Name'])
+                continue
             nbeams = len(beam)
             for ibeam in range(nbeams):
                 if 'CPManagerObject' not in beam[ibeam]['CPManager']:
@@ -259,7 +263,10 @@ def readPFile(filename, ptype, outfmt=''):
                             curvepainter = modifier[imodifier]['ContourList']['CurvePainter']
                             ncurvepainter = len(curvepainter)
                             for icurve in range(ncurvepainter):
-                                pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
+                                if curvepainter[icurve]['Curve']['RawData']['NumberOfPoints'] == '0':
+                                    pts = None
+                                else:
+                                    pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
                                 curvepainter[icurve]['Curve']['RawData']['Points']=pts
             logging.info('post-processing dict for Points in plan.Trial done')
 
