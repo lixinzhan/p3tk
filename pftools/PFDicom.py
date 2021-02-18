@@ -1,5 +1,4 @@
 import os
-from pftools.PFPlanMachine import readMachine
 import struct
 import sys
 import logging
@@ -9,8 +8,6 @@ import copy
 
 from numpy.core.fromnumeric import shape
 
-# from pftools.PFImgInfo import PFImgInfo
-# from pftools.PFBackup import PFBackup
 import pftools.common_dcm_settings as dcmcommon
 
 from pftools.PFPatient import readPatient
@@ -21,7 +18,7 @@ from pftools.PFPlanInfo import readPlanInfo
 from pftools.PFPlanPatientSetup import readPlanPatientSetup
 from pftools.PFPlanPoints import readPlanPoints
 from pftools.PFPlanROI import readPlanROI
-from pftools.PFPlanTrial import PFPlanTrial, readPlanTrial, _Trial
+from pftools.PFPlanTrial import readPlanTrial, _Trial
 from pftools.PFPlanMachine import readMachine
 
 import pydicom.uid
@@ -130,6 +127,7 @@ class PFDicom():
         img_set = self.Patient.ImageSetList.ImageSet[self.ImageSetID]
         self.ScanDate = self.ImgSetHeader.date.split()[0].replace('-','')
 
+        # prepare for coordinate transformation
         x0 = self.ImgSetHeader.x_start
         y0 = self.ImgSetHeader.y_start
         z0 = self.ImgSetHeader.z_start
@@ -169,7 +167,7 @@ class PFDicom():
             if dcmcommon.debug:
                 print('-- Prescriptions in Trial ' + trials[itri].Name + ": " + str(presc_list))
 
-            # if len(presc_list) == 1: continue
+            if len(presc_list) == 1: continue
 
             # For more than one presc, split the trial
             for prsc_name in presc_list:
@@ -179,7 +177,7 @@ class PFDicom():
                     if beam.Prescription.Name != prsc_name:
                         beam.Removable = True
                 trials.append(trial_copy)
-            trials[itri].Removable = True  # label the original trial for removal
+            trials[itri].Removable = True  # flag the original trial for removal
         # end of splitting trials
 
         # remove the flagged trials
@@ -187,25 +185,25 @@ class PFDicom():
             if trial.Removable:
                 self.PlanTrial.Trial.remove(trial)
 
-        # Set TrialID for easy reference later and remove flagged beams
-        # the remove() function is not working for beam for unknown reason. 
-        # using pop here then.
+        # Set TrialID for easy reference later; and remove flagged beams
         for itri in range(len(self.PlanTrial.Trial)):
             self.PlanTrial.Trial[itri].TrialID = itri
             beams = self.PlanTrial.Trial[itri].BeamList.Beam
+            # remove() not working for unknown reason. pop() is used here.
             for ibeam in reversed(range(len(beams))):
                 if beams[ibeam].Removable:
                     self.PlanTrial.Trial[itri].BeamList.Beam.pop(ibeam)
 
-        if dcmcommon.debug:
-            for trial in self.PlanTrial.Trial:
-                print('Trial: %s with ID %s of Plan %s' % (trial.Name, trial.TrialID, self.PlanID))
-                for beam in trial.BeamList.Beam:
-                    print('  Beam %12s -- prescription %s/%s of name %s. Removable = %s' % (beam.Name, 
-                        beam.Prescription.PrescriptionDose, beam.Prescription.NumberOfFractions,
-                        beam.Prescription.Name, beam.Removable))
+        # if dcmcommon.debug:
+        #     for trial in self.PlanTrial.Trial:
+        #         print('Trial: %s with ID %s of Plan %s' % (trial.Name, trial.TrialID, self.PlanID))
+        #         for beam in trial.BeamList.Beam:
+        #             print('  Beam %12s -- prescription %s/%s of name %s. Removable = %s' % (beam.Name, 
+        #                 beam.Prescription.PrescriptionDose, beam.Prescription.NumberOfFractions,
+        #                 beam.Prescription.Name, beam.Removable))
 
     def _generateUIDs(self, trial:Optional[_Trial]=None):
+        # default to Trial[0]
         if trial is None and self.DICOMFORMAT in ['RP', 'RD']:
             trial = self.PlanTrial.Trial[0]
 
@@ -223,9 +221,9 @@ class PFDicom():
         entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), 'RS']
         self.RSSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'7')
         if self.DICOMFORMAT in ['RP', 'RD']:
-            entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), str(trial.Name), 'RP']
+            entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), str(trial.TrialID), 'RP']
             self.RPSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'9')
-            entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), str(trial.Name), 'RD']
+            entropy_src = [ self.Patient.MedicalRecordNumber, str(self.ImageSetID), str(self.PlanID), str(trial.TrialID), 'RD']
             self.RDSOPInstanceUID = pydicom.uid.generate_uid(entropy_srcs=entropy_src)[:-3] + str(self.PlanID).rjust(3,'8')
 
         if self.DICOMFORMAT == 'CT':
@@ -261,22 +259,20 @@ class PFDicom():
         self.SeriesSOPInstanceUID = pydicom.uid.generate_uid()[:-3] + '666'
 
 
+    # always assume input/output coord list in the shape of [x,y,z,x,y,z...]
     def transCoord(self, clist=[]) -> List:
         trans = []
         for i in range(len(clist)):
             if i%3 == 0: # x
                 xyz = clist[i]
             elif i%3 == 1: # y
-                # ystart = self.ImgSetHeader.y_start
-                # y_dim = self.ImgSetHeader.y_dim
-                # ypixdim = self.ImgSetHeader.y_pixdim
-                # y = 2.0*ystart-clist[i]+2.0*(y_dim-1)*ypixdim
                 xyz = -(clist[i] - self.Yshift)
             else: # i%3 == 2: # z
                 xyz = -clist[i]
             trans.append('%6.2f' % (xyz*10.0))
         return trans
 
+    # make each beam contains the correct prescription info
     def _linkPrescriptionToBeam(self):
         for trial in self.PlanTrial.Trial:
             for beam in trial.BeamList.Beam:
@@ -284,10 +280,6 @@ class PFDicom():
                     if beam.PrescriptionName == presc.Name:
                         beam.Prescription = presc
                         break                
-                # print('Beam %15s of Trial %12s has prescription %12s of %s/%s' % (
-                #     beam.Name, trial.Name, beam.Prescription.Name, 
-                #     beam.Prescription.PrescriptionDose,
-                #     beam.Prescription.NumberOfFractions))
 
     def _setSOPCommon(self, ds):
         ds.SpecificCharacterSet = 'ISO_IR 100'
@@ -329,13 +321,13 @@ class PFDicom():
         # if self.DICOMFORMAT != 'CT':
         #     ds.ReferencedStudySequence = self._getReferencedStudySequence()
 
+    # Series Number (0020,0011) is a human readable numeric label, which may be empty 
+    # and is not unique within any defined scope; it is required to have the same value 
+    # for all instances that have the same Series Instance UID (0020,000E) 
+    # (this is true of all attributes for the same "entity"), but there is no requirement 
+    # that it be different for different series (though this is often the case for 
+    # different series in the same study, especially if produced by the same equipment) 
     def _setSeriesModule(self, ds):
-        # Series Number (0020,0011) is a human readable numeric label, which may be empty 
-        # and is not unique within any defined scope; it is required to have the same value 
-        # for all instances that have the same Series Instance UID (0020,000E) 
-        # (this is true of all attributes for the same "entity"), but there is no requirement 
-        # that it be different for different series (though this is often the case for 
-        # different series in the same study, especially if produced by the same equipment) 
         ds.SeriesInstanceUID = self.SeriesSOPInstanceUID
         ds.SeriesNumber = self.ImgSetHeader.exam_id
         if self.DICOMFORMAT == 'CT':
@@ -352,7 +344,6 @@ class PFDicom():
         # ds.SeriesDate = self.ScanDate   # Optional
         # ds.SeriesTime = ''              # Optional
             
-
     def _setEquipmentModule(self, ds):
         if self.DICOMFORMAT == 'CT':
             ds.Manufacturer = self.ImgSetHeader.manufacturer
@@ -412,8 +403,7 @@ class PFDicom():
         ds.Columns = self.ImgSetHeader.y_dim
         ds.PixelAspectRatio = r"1\1"            
         slicedata = self.ImageData[
-            index*ds.Rows*ds.Columns:(index+1)*ds.Rows*ds.Columns
-            ]
+            index*ds.Rows*ds.Columns:(index+1)*ds.Rows*ds.Columns]
         ds.PixelRepresentation = 1
         ds.SmallestImagePixelValue = int(np.amin(slicedata))
         ds.LargestImagePixelValue  = int(np.amax(slicedata))
@@ -430,9 +420,10 @@ class PFDicom():
 
     def _setVOILUTModule(self, ds):
         ds.WindowCenter = dcmcommon.WindowCenter
-        ds.WindowWidth = dcmcommon.WindowWidth
+        ds.WindowWidth  = dcmcommon.WindowWidth
 
 
+    # CT set will be created anyway, no matter if there are existing CT folder.
     def createDicomCT(self, imgsetid) -> None:
         # ctpath = '%s/ImageSet_%s.DICOM/' % (self.PFPath, imgsetid)
         # if os.path.exists(ctpath):
@@ -485,7 +476,6 @@ class PFDicom():
 
         return True
 
-    # OK
     def _getContourImageSequence(self):
         seq = pydicom.sequence.Sequence()
         for i in range(self.ImgSetInfo.NumberOfImages):
@@ -495,7 +485,6 @@ class PFDicom():
             seq.append(ds_img)
         return seq
 
-    # OK
     def _getRTReferencedSeriesSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_series = Dataset()
@@ -504,7 +493,6 @@ class PFDicom():
         seq.append(ds_series)
         return seq
 
-    # OK
     def _getRTReferencedStudySquence(self):
         seq = pydicom.sequence.Sequence()
         ds_refstudy = Dataset()
@@ -514,7 +502,6 @@ class PFDicom():
         seq.append(ds_refstudy)
         return seq
 
-    # OK
     def _getReferencedFrameOfReferenceSequence(self):
         seq = pydicom.sequence.Sequence()
         ds_refframe = Dataset()
@@ -523,7 +510,7 @@ class PFDicom():
         seq.append(ds_refframe)
         return seq
 
-    # Not find in Eclipse RS export. Confirm later.
+    # Not found in Eclipse RS export. It may not be necessary
     # def _getPredecessorStructureSetSequence(self, ds):
     #     seq = pydicom.sequence.Sequence()
     #     ds_predstruct = Datase()
@@ -531,7 +518,6 @@ class PFDicom():
     #     ds_predstruct.ReferencedSOPInstanceUID = 
     #     return seq
 
-    # OK
     def _getStructureSetROISequence(self):
         seq = pydicom.sequence.Sequence()
 
@@ -559,7 +545,6 @@ class PFDicom():
 
         return seq
 
-    # OK
     def _setStructureSetModule(self, ds):
         # ds.InstanceNumber = 0   # not to be included.
         ds.StructureSetLabel = self.PlanInfo.PlanName
@@ -571,6 +556,7 @@ class PFDicom():
         # ds.PredecessorStructureSetSequence = self._getPredecessorStructureSetSequence(ds)
         ds.StructureSetROISequence = self._getStructureSetROISequence()
 
+    # the CT clice that is closest to "z"
     def _getClosestImageInstanceUID(self, z): # in cm
         uid = 'unknown'
         for img_info in self.ImageInfo:
@@ -580,7 +566,6 @@ class PFDicom():
                 return uid
         return uid
 
-    # OK
     def _getContourSequence(self, roi, ctype='POINT'):
         seq = pydicom.sequence.Sequence()
         if ctype == 'POINT':
@@ -590,8 +575,6 @@ class PFDicom():
             ds_point.ContourData = self.transCoord([
                 roi.XCoord, roi.YCoord, roi.ZCoord
             ])
-            # print(roi.XCoord, roi.YCoord, roi.ZCoord)
-            # print(ds_point.ContourData)
             ds_point.ContourImageSequence = pydicom.sequence.Sequence()
             ds_contourimage = Dataset()
             ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
@@ -617,7 +600,6 @@ class PFDicom():
                 
         return seq
 
-    # OK
     def _getROIContourSequence(self):
         from pftools.PFColor import PFColor
         seq = pydicom.sequence.Sequence()
@@ -649,10 +631,8 @@ class PFDicom():
 
         return seq
 
-    # OK
     def _setROIContourModule(self, ds):
         ds.ROIContourSequence = self._getROIContourSequence()
-
 
     def _getRTROIObservationsSequence(self, ds):
         seq = pydicom.sequence.Sequence()
@@ -683,10 +663,8 @@ class PFDicom():
 
         return seq
 
-    # OK now
     def _setRTROIObservationsModule(self, ds):
         ds.RTROIObservationsSequence = self._getRTROIObservationsSequence(ds)
-
 
     def createDicomRS(self, planid=0):
         self._initializeForDicom('RS', planid)
@@ -742,7 +720,6 @@ class PFDicom():
         # print('--> Dose/MU @calib: %s, beam_mu %s' % (calib_dose_per_mu, beam_mu))
         return beam_mu
 
-
     def _getBeamDosePerFrac(self, beam) -> np.array:
         import struct
         data_block = []
@@ -769,7 +746,6 @@ class PFDicom():
         return np.array(data_block, dtype=float)
 
     def _setDoseImageModule(self, ds, trial):
-        # assumes only one trial is for RT dose. The others are for imaging/setup etc.
         x_orig = trial.DoseGridOriginX
         y_orig = trial.DoseGridOriginY
         z_orig = trial.DoseGridOriginZ
@@ -781,7 +757,6 @@ class PFDicom():
         nz = trial.DoseGridDimensionZ
         # Shift applied to y. Probably ref orig is at different side of the dose region for Y.
         [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig])
-        # print('orig: ', [x_orig,y_orig,z_orig], 'new: ', [x0,y0,z0])
         dx = dx * 10  # cm --> mm
         dy = dy * 10
         dz = dz * 10 
@@ -822,8 +797,8 @@ class PFDicom():
         beam = trial.BeamList.Beam[0]
         presc_frac = beam.Prescription.NumberOfFractions
         presc_dose = beam.Prescription.PrescriptionDose
-        print('Prescription: %s/%s' % (presc_dose, presc_frac))
-        print('Dose pixel value range: [%s, %s], resulting in Dmax: %6.2f%s' % (
+        print('Trial Prescription: %s/%s (%s)' % (presc_dose, presc_frac, trial.Name))
+        print('Dose pixel range:  [%s, %s], resulting in Dmax: %6.2f%s' % (
             smallestImagePixelValue, largestImagePixelValue,
             largestImagePixelValue*0.01/presc_dose, '%'))
 

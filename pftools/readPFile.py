@@ -27,6 +27,7 @@ import yaml
 from yaml.loader import FullLoader, BaseLoader
 from copy import deepcopy
 
+# we don't need most parts in plan.Pinnacle.Machines, hence are not reading them in.
 def _processPFMachine(text):
     rm_start = False
     rm_end = True
@@ -183,9 +184,6 @@ def readPFile(filename, ptype, outfmt=''):
         preline = line
 
         text.append(line)
-
-    #for line in text:
-    #    print(line[:-1])
     ################################################
 
     ################################################
@@ -230,8 +228,6 @@ def readPFile(filename, ptype, outfmt=''):
     ################################################
     # Points in plan.Trial not fully done yet. Convert to list here
     if ptype == 'plan.Trial':
-        # Trial.BeamList.Beam[].CPManager.CPManagerObject[].ControlPointList.ControlPoint[].ModifierList.BeamModifier[].ContourList.CurvePainter.Curve.RawData.Points
-        # Trial.BeamList.Beam[].CPManager.CPManagerObject[].ControlPointList.ControlPoint[].MLCLeafPositions.RawData.Points
         for itr in range(len(yobj['Trial'])):
             beam = yobj['Trial'][itr]['BeamList']['Beam']
             nbeams = len(beam)
@@ -249,7 +245,6 @@ def readPFile(filename, ptype, outfmt=''):
                     for icpts in range(ncpts):
                         leafpos = [float(pt) for pt in cpts[icpts]['MLCLeafPositions']['RawData']['Points'].split(',')]
                         cpts[icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
-                        #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['MLCLeafPositions']['RawData']['Points']=leafpos
                         # adding in missing part in some plan.Trial
                         if cpts[icpts]['ModifierList'] is None or cpts[icpts]['ModifierList'] == '':                        
                             cpts[icpts]['ModifierList'] = {'BeamModifier':[{'Name':'', 'ContourList': None}]}
@@ -265,11 +260,10 @@ def readPFile(filename, ptype, outfmt=''):
                             ncurvepainter = len(curvepainter)
                             for icurve in range(ncurvepainter):
                                 pts = [float(pt) for pt in curvepainter[icurve]['Curve']['RawData']['Points'].split(',')]
-                                #yobj['Trial']['BeamList']['Beam'][ibeam]['CPManager']['CPManagerObject'][icpm]['ControlPointList']['ControlPoint'][icpts]['ModifierList']['BeamModifier'][imodifier]['ContourList']['CurvePainter']['Curve']['RawData']['Points']=pts
                                 curvepainter[icurve]['Curve']['RawData']['Points']=pts
             logging.info('post-processing dict for Points in plan.Trial done')
 
-        # in some rare cases, SSD, AvgSSD, are not numbers, make them blank to avoid datatype conversion issue
+        # In some rare cases, SSD, AvgSSD, are not numbers, make them blank to avoid datatype conversion issue
             beams = yobj['Trial'][itr]['BeamList']['Beam']
             for bm in beams:
                 if not bm['SSD'].isnumeric():
@@ -290,37 +284,33 @@ if __name__ == '__main__':
 
     # plan.Points
     Points = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Points', 'plan.Points')
-    print(Points.Poi[1].Color)
+    print(Points['Poi'][1]['Color'])
 
     # plan.roi
     ROIs = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.roi', 'plan.roi')
-    print(len(ROIs.roi[0].curve))
+    print(len(ROIs['roi'][0]['curve']))
 
     # ImageSet.header
     Header = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.header', 'ImageSet.header')
-    print(Header.y_start, ' -- ', Header.dim_units)
+    print(Header['y_start'], ' -- ', Header['dim_units'])
 
     # Patient
     Patient = readPFile(prjpath+'examples/Patient_6204/Patient', 'Patient')
-    print(Patient.PlanList.Plan[0].PlanName)
+    print(Patient['PlanList']['Plan'][0]['PlanName'])
 
     # ImageSet.ImageInfo
     ImageInfo = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageInfo', 'ImageSet.ImageInfo')
-    print(ImageInfo.ImageInfo[0].TablePosition, ImageInfo.ImageInfo[2].SliceNumber)
+    print(ImageInfo['ImageInfo'][0]['TablePosition'], ImageInfo['ImageInfo'][2]['SliceNumber'])
 
     # ImageSet.ImageSet
     ImageSet = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageSet', 'ImageSet.ImageSet')
-    print(ImageSet.NumberOfImages)
+    print(ImageSet['NumberOfImages'])
 
     # plan.PatientSetup
     PatientSetup = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.PatientSetup', 'plan.PatientSetup')
-    print(PatientSetup.Position)
+    print(PatientSetup['Position'])
 
     # plan.Trial
     PlanTrial = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Trial', 'plan.Trial')
-    print(PlanTrial.Trial.PrescriptionList.Prescription[0].PrescriptionDose)
-    print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points[30])
-    #print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RawData.Points.split(',')[30])
-    print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[1].MLCLeafPositions.RowLabelList.RowLabel[0].String)
-    print(PlanTrial.Trial.BeamList.Beam[0].CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0].ModifierList.BeamModifier[0].ContourList.CurvePainter[0].Curve.RawData.Points[4])
+    print(PlanTrial['Trial'][0]['PrescriptionList']['Prescription'][0]['PrescriptionDose'])
     
