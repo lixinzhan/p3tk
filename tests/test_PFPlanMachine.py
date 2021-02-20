@@ -2,7 +2,7 @@ import os
 import pytest
 import logging
 from pftools.PFPlanMachine import readMachine
-from pftools.readPFile import readPFile
+# from pftools.readPFile import readPFile
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"

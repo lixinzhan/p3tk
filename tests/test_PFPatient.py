@@ -1,15 +1,17 @@
 import os
 import pytest
 import logging
-from pftools.PFPatient import PFPatient
-from pftools.readPFile import readPFile
+from pftools.PFPatient import PFPatient, readPatient
+# from pftools.readPFile import readPFile
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
 logging.basicConfig(format=FORMAT, filename=prjpath+'logs/pytest.log', level=logging.WARNING)
 
-Pdict = readPFile(prjpath+'examples/Patient_6204/Patient', 'Patient', 'dict')
-pfPatient = PFPatient(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/Patient', 'Patient', 'dict')
+# pfPatient = PFPatient(**Pdict)
+
+pfPatient = readPatient(prjpath+'examples/Patient_6204/')
 
 def test_PFPatient():
     assert(pfPatient.MedicalRecordNumber,

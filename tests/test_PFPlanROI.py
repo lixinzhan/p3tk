@@ -1,20 +1,23 @@
 import os
 import pytest
 import logging
-from pftools.PFPlanROI import PFPlanROI
-from pftools.readPFile import readPFile
+from pftools.PFPlanROI import PFPlanROI, readPlanROI
+# from pftools.readPFile import readPFile
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
 logging.basicConfig(format=FORMAT, filename=prjpath+'logs/pytest.log', level=logging.WARNING)
 
-Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.roi', 
-                'plan.roi', 'dict')
-pfPlanRoi_0 = PFPlanROI(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.roi', 
+#                 'plan.roi', 'dict')
+# pfPlanRoi_0 = PFPlanROI(**Pdict)
 
-Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_1/plan.roi', 
-                'plan.roi', 'dict')
-pfPlanRoi_1 = PFPlanROI(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_1/plan.roi', 
+#                 'plan.roi', 'dict')
+# pfPlanRoi_1 = PFPlanROI(**Pdict)
+
+pfPlanRoi_0 = readPlanROI(prjpath+'examples/Patient_6204/', planid=0)
+pfPlanRoi_1 = readPlanROI(prjpath+'examples/Patient_6204/', planid=1)
 
 
 def test0_PFPlanROI():

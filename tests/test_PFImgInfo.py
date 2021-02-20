@@ -1,16 +1,18 @@
 import os
 import pytest
 import logging
-from pftools.PFImgInfo import PFImgInfo
-from pftools.readPFile import readPFile
+from pftools.PFImgInfo import PFImgInfo, readImageInfo
+# from pftools.readPFile import readPFile
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
 logging.basicConfig(format=FORMAT, filename=prjpath+'logs/pytest.log', level=logging.WARNING)
 
-Pdict = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageInfo', 
-                'ImageSet.ImageInfo', 'dict')
-pfImgInfo = PFImgInfo(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/ImageSet_0.ImageInfo', 
+#                 'ImageSet.ImageInfo', 'dict')
+# pfImgInfo = PFImgInfo(**Pdict)
+
+pfImgInfo = readImageInfo(prjpath+'examples/Patient_6204/', imgsetid=0)
 
 def test_PFImgInfo():
     assert(pfImgInfo.ImageInfo[0].TablePosition,

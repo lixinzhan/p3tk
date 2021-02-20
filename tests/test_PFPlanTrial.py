@@ -1,16 +1,23 @@
 import os
 import pytest
 import logging
-from pftools.PFPlanTrial import PFPlanTrial
-from pftools.readPFile import readPFile
+from pftools.PFPlanTrial import PFPlanTrial, readPlanTrial
+# from pftools.readPFile import readPFile
 
 prjpath = os.path.dirname(os.path.abspath(__file__))+'/../'
 FORMAT = "[%(asctime)s %(levelname)s - %(funcName)s] %(message)s"
 logging.basicConfig(format=FORMAT, filename=prjpath+'logs/pytest.log', level=logging.WARNING)
 
-Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Trial', 
-                'plan.Trial', 'dict')
-pfPlanTrial_0 = PFPlanTrial(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_0/plan.Trial', 
+#                 'plan.Trial', 'dict')
+# pfPlanTrial_0 = PFPlanTrial(**Pdict)
+# Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_1/plan.Trial', 
+#                 'plan.Trial', 'dict')
+# pfPlanTrial_1 = PFPlanTrial(**Pdict)
+
+
+pfPlanTrial_0 = readPlanTrial(prjpath+'examples/Patient_6204/', planid=0)
+pfPlanTrial_1 = readPlanTrial(prjpath+'examples/Patient_6204/', planid=1)
 
 def test0_PFPlanTrial():
     cpmgr0 = pfPlanTrial_0.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
@@ -66,10 +73,6 @@ def test0_PFPlanTrial_BM():
         -10.3606
     )
 
-
-Pdict = readPFile(prjpath+'examples/Patient_6204/Plan_1/plan.Trial', 
-                'plan.Trial', 'dict')
-pfPlanTrial_1 = PFPlanTrial(**Pdict)
 
 def test1_PFPlanTrial():
     cpmgr0 = pfPlanTrial_1.Trial[0].BeamList.Beam[0].CPManager.CPManagerObject[0]
