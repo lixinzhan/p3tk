@@ -559,9 +559,9 @@ class PFDicom():
 
     # the CT clice that is closest to "z"
     def _getClosestImageInstanceUID(self, z): # in cm
-        uid = 'unknown'
+        uid = 'NO_CLOSEST_CT_IMAGE_LOCATED'
         for img_info in self.ImageInfo:
-            if abs(z - img_info.TablePosition) < 0.02:  # in cm
+            if abs(z - img_info.TablePosition) < self.ImgSetHeader.z_pixdim/2.0:  # in cm
                 uid = self.CTSOPInstanceUID[img_info.SliceNumber-1]
                 # print('Slice #: %s,  TablePosition: %s, InstanceUID: %s' % (img_info.SliceNumber, img_info.TablePosition, uid))
                 return uid
@@ -876,12 +876,14 @@ class PFDicom():
         seq.append(ds_structset)
         return seq
 
-    def _setRTGeneralPlanModule(self, ds):
+    def _setRTGeneralPlanModule(self, ds, trial):
         ds.InstanceNumber = '1'
-        ds.RTPlanLabel = '%s-%s' % ('PF', self.PlanInfo.PlanName[:10]) # 13 chars limit on PlanName
-        ds.RTPlanName = self.PlanInfo.PlanName
-        ds.RTPlanDate = '20210208'
-        ds.RTPlanTime = '165246.72'
+        # Plan Name + Prescription Name
+        planname = '%s %s' % (self.PlanInfo.PlanName, trial.Name.split('_')[-1]) 
+        ds.RTPlanLabel = planname[:13].strip()  # 13 chars limit on PlanName
+        ds.RTPlanName = planname
+        ds.RTPlanDate = trial.ObjectVersion.WriteTimeStamp[:10].replace('-','') # '20210208'
+        ds.RTPlanTime = trial.ObjectVersion.WriteTimeStamp[11:].replace(':','') # '165246.72'
         # ds.TreatmentProtocols = ''
         ds.PlanIntent = 'CURATIVE'
         # ds.TreatmentSite = ''
@@ -1157,7 +1159,7 @@ class PFDicom():
             self._setEquipmentModule(ds)
             self._setInstanceUID(ds, self.RPSOPInstanceUID)
 
-            self._setRTGeneralPlanModule(ds)
+            self._setRTGeneralPlanModule(ds, trial)
             self._setRTPrescriptionModule(ds, trial)
             # self._setToleranceTablesModule(ds)
             self._setRTPatientSetupModule(ds)
