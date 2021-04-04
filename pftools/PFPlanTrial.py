@@ -43,6 +43,8 @@ class _WedgeContext(BaseModel):
     OffsetOrigin = ''
     OffsetDistance: Optional[float]
     Angle = ''
+    MinDeliverableMU = 0
+    MaxDeliverableMU = 1e+30
 
 class _MLCLeafPositions(BaseModel):
     RawData: Optional[_RawData] = None

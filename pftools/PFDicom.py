@@ -257,7 +257,7 @@ class PFDicom():
 
 
     # always assume input/output coord list in the shape of [x,y,z,x,y,z...]
-    def transCoord(self, clist=[]) -> List:
+    def transCoord(self, clist=[], out_unit='cm') -> List:
         trans = []
         for i in range(len(clist)):
             if i%3 == 0: # x
@@ -266,7 +266,10 @@ class PFDicom():
                 xyz = -(clist[i] - self.Yshift)
             else: # i%3 == 2: # z
                 xyz = -clist[i]
-            trans.append('%6.2f' % (xyz*10.0))
+            if out_unit == 'mm':
+                trans.append('%6.2f' % (xyz*10.0))
+            else:
+                trans.append('%6.1f' % xyz)
         return trans
 
     # make each beam contains the correct prescription info
@@ -575,7 +578,7 @@ class PFDicom():
             ds_point.NumberOfContourPoints = 1
             ds_point.ContourData = self.transCoord([
                 roi.XCoord, roi.YCoord, roi.ZCoord
-            ])
+            ], out_unit='mm')
             ds_point.ContourImageSequence = pydicom.sequence.Sequence()
             ds_contourimage = Dataset()
             ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
@@ -587,7 +590,7 @@ class PFDicom():
                 ds_planar = Dataset()
                 ds_planar.ContourGeometricType = ctype
                 ds_planar.NumberOfContourPoints = curve.num_points
-                ds_planar.ContourData = self.transCoord(curve.points)
+                ds_planar.ContourData = self.transCoord(curve.points, out_unit='mm')
                 ds_planar.ContourImageSequence = pydicom.sequence.Sequence()
                 ds_contourimage = Dataset()
                 ds_contourimage.ReferencedSOPClassUID = self.CTSOPClassUID
@@ -757,7 +760,7 @@ class PFDicom():
         ny = trial.DoseGridDimensionY
         nz = trial.DoseGridDimensionZ
         # Shift applied to y. Probably ref orig is at different side of the dose region for Y.
-        [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig])
+        [x0, y0, z0] = self.transCoord([x_orig, y_orig+dy*(ny-1), z_orig], out_unit='mm')
         dx = dx * 10  # cm --> mm
         dy = dy * 10
         dz = dz * 10 
@@ -914,7 +917,7 @@ class PFDicom():
             pt_number += 1
             if pt.Name == pt_name:
                 ds_presc2.DoseReferencePointCoordinates = self.transCoord(
-                    [pt.XCoord, pt.YCoord, pt.ZCoord] )
+                    [pt.XCoord, pt.YCoord, pt.ZCoord], out_unit='mm' )
                 # ds_presc.ReferencedROINumber = pt_number # when struct type is POINT
                 break
         # ds_presc.DoseReferenceUID = self.RDSOPInstanceUID
@@ -1038,7 +1041,7 @@ class PFDicom():
             iso = []
             for poi in self.PlanPoints.Poi:
                 if poi.Name == iso_name:
-                    iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord])
+                    iso = self.transCoord([poi.XCoord, poi.YCoord, poi.ZCoord], out_unit='mm')
                     break
             ds_cp.IsocenterPosition = iso
             ds_cp.TableTopPitchAngle = 0
@@ -1067,6 +1070,8 @@ class PFDicom():
 
         return seq
 
+    def _getWedgeSequence(self, beam, idx_beam): 
+        pass
 
     def _setRTBeamsModule(self, ds, trial): # The most important module ?
         ds.BeamSequence = pydicom.sequence.Sequence()
@@ -1120,7 +1125,12 @@ class PFDicom():
                 self.DynamicMode = 'SLIDINGWINDOW'
             ds_bm.RadiationType = beam.Modality.upper()[:-1] #'PHOTON'
             ds_bm.TreatmentDeliveryType = 'TREATMENT'
+
+            # Wedges            
             ds_bm.NumberOfWedges = 0
+            ds_bm.WedgeSequence = self._getWedgeSequence(beam, beam_idx)
+
+            # Compensators and Bolus
             ds_bm.NumberOfCompensators = 0
             ds_bm.NumberOfBoli = 0
             ds_bm.NumberOfBlocks = 0
