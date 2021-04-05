@@ -98,10 +98,32 @@ class _MonitorUnitInfo(BaseModel):
     OFMeasurementDepth: Optional[float]
     OutputFactorInfo = ''
 
+class _BinaryVolume(BaseModel):
+    XDim: Optional[int]
+    YDim: Optional[int]
+    ZDim: Optional[int]
+    XMin: Optional[int]
+    YMin: Optional[int]
+    ZMin: Optional[int]
+    XMax: Optional[int]
+    YMax: Optional[int]
+    ZMax: Optional[int]
+    BinaryData = ''
+    
 class _Bolus(BaseModel):
     Type = ''
+    NumVoxelsSet: Optional[int]
     Density: Optional[float]
+    Height: Optional[float]
+    BackPlaneDepth: Optional[float]
+    Width: Optional[float]
     Thickness: Optional[float]
+    DisplacementX: Optional[float]
+    DisplacementY: Optional[float]
+    VoxelDimX: Optional[float]
+    VoxelDimY: Optional[float]
+    VoxelDimZ: Optional[float]
+    BinaryVolume: Optional[_BinaryVolume] = None
 
 class _Compensator(BaseModel):
     Name = ''
