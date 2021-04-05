@@ -1009,6 +1009,48 @@ class PFDicom():
         seq.append(ds_doseref)
         return seq
 
+    def _getWedgeSequence(self, beam, beam_idx): 
+        cpt0 = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0]
+        wdg  = cpt0.WedgeContext
+
+        seq = pydicom.sequence.Sequence()
+        ds_wdg = Dataset()
+        ds_wdg.WedgeNumber = 1
+        if wdg.WedgeName.upper() == 'DYNAMIC' or wdg.WedgeName.upper == 'EDW':            
+            ds_wdg.WedgeType = 'DYNAMIC'
+            ds_wdg.WedgeID = 'EDW'
+        elif wdg.WedgeName.upper == 'STANDARD':
+            ds_wdg.WedgeType = 'STANDARD'
+            ds_wdg.WedgeID = 'WDG'
+        else:
+            ds_wdg.WedgeType = wdg.WedgeName
+
+        ds_wdg.WedgeAngle = wdg.Angle
+        ds_wdg.WedgeFactor = ''
+        if wdg.Orientation == 'WedgeBottomToTop':
+            ds_wdg.WedgeOrientation = '0'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'IN'
+        elif wdg.Orientation == 'WedgeTopToBottom':
+            ds_wdg.WedgeOrientation = '180'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'OUT'
+        elif wdg.Orientation == 'WedgeLeftToRight':
+            ds_wdg.WedgeOrientation = '270'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'L'
+        elif wdg.Orientation == 'WedgeRightToLeft':
+            ds_wdg.WedgeOrientation = '90'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'R'
+        else:
+            ds_wdg.WedgeOrientation = '0'
+            ds_wdg.WedgeID = 'Unknown'
+
+        # ds_wdg.WedgeOrientation = ''
+        # ds_wdg.SourceToWedgeTrayDistance = ''
+        # ds_wdg.EffectiveWedgeAngle = ''
+        # ds_wdg.AccessoryCode = ''
+
+        seq.append(ds_wdg)
+        return seq        
+
     def _getControlPointSequence(self, beam, idx_beam): 
         seq = pydicom.sequence.Sequence()
         cp_idx = 0 #idx_beam * 100
@@ -1020,6 +1062,22 @@ class PFDicom():
             ds_cp.CumulativeMetersetWeight = str('%8.4f' % cp_wgt)
             ds_cp.NominalBeamEnergy = beam.MachineEnergyName[:-1]
             ds_cp.DoseRateSet = 600
+            # Wedge
+            wdg = ctrl_points[0].WedgeContext
+            if wdg.WedgeName.upper() != 'NO WEDGE':
+                ds_cp.WedgePositionSequence = pydicom.sequence.Sequence()
+                ds_wdg = Dataset()
+                ds_wdg.ReferencedWedgeNumber = 1
+                if wdg.Orientation == 'WedgeBottomToTop':
+                    ds_wdg.WedgePosition = 'IN'
+                elif wdg.Orientation == 'WedgeTopToBottom':
+                    ds_wdg.WedgePosition = 'OUT'
+                elif wdg.Orientation == 'WedgeRightToLeft':
+                    ds_wdg.WedgePosition = 'RGT'
+                elif wdg.Orientation == 'WedgeLeftToRight':
+                    ds_wdg.WedgePosition = 'LFT'
+                ds_cp.WedgePositionSequence.append(ds_wdg)
+
             ds_cp.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence(cp)
             ds_cp.GantryAngle = cp.Gantry
             ds_cp.GantryRotationDirection = 'NONE'
@@ -1069,9 +1127,6 @@ class PFDicom():
             seq.append(ds_cp2)
 
         return seq
-
-    def _getWedgeSequence(self, beam, idx_beam): 
-        pass
 
     def _setRTBeamsModule(self, ds, trial): # The most important module ?
         ds.BeamSequence = pydicom.sequence.Sequence()
@@ -1126,9 +1181,14 @@ class PFDicom():
             ds_bm.RadiationType = beam.Modality.upper()[:-1] #'PHOTON'
             ds_bm.TreatmentDeliveryType = 'TREATMENT'
 
-            # Wedges            
-            ds_bm.NumberOfWedges = 0
-            ds_bm.WedgeSequence = self._getWedgeSequence(beam, beam_idx)
+            # Wedge             
+            cpt0 = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0]
+            UWedgeName = cpt0.WedgeContext.WedgeName.upper()
+            if  UWedgeName == 'DYNAMIC' or UWedgeName == 'EDW' or UWedgeName == 'STANDARD':
+                ds_bm.NumberOfWedges = 1
+                ds_bm.WedgeSequence = self._getWedgeSequence(beam, beam_idx)
+            else:  # "No Wedge"
+                ds_bm.NumberOfWedges = 0
 
             # Compensators and Bolus
             ds_bm.NumberOfCompensators = 0
@@ -1140,7 +1200,6 @@ class PFDicom():
                 ds_bm.NumberOfControlPoints = 2 * len(ctrl_points)
             else:   # both STATIC and SLIDINGWINDOW
                 ds_bm.NumberOfControlPoints = len(ctrl_points) + 1
-            cpt = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
             ds_bm.ControlPointSequence = self._getControlPointSequence(beam, beam_idx)
             ds_bm.ReferencedPatientSetupNumber = 1
             ds_bm.ReferencedToleranceTableNumber = 0
