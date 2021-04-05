@@ -49,21 +49,28 @@ from pftools.readPFile import readPFile
 # class _ElectronApplicatorList(BaseModel):
 #     ElectronApplicator: Optional[_ElectronApplicator] = None
 
-# class _Wedge(BaseModel):
-#     Name = ''
-#     SourceToWedgeDistance: Optional[float]
-#     NominalAngle: Optional[float]
-#     IsDynamic: Optional[int]
-#     LeftToRightLabel = ''
-#     RightToLeftLabel = ''
-#     TopToBottomLabel = ''
-#     BottomToTopLabel = ''
-#     LeftToRightCode = ''
-#     RightToLeftCode = ''
-#     TopToBottomCode = ''
-#     BottomToTopCode = ''
-# class _WedgeList(BaseModel):
-#     Wedge: List[_Wedge] = None
+class _Wedge(BaseModel):
+    Name = ''
+    SourceToWedgeDistance: Optional[float]
+    NominalAngle: Optional[float]
+    WedgeFactor: Optional[float]
+    AttenuationCoefficient: Optional[float]
+    IsDynamic: Optional[int]
+    CanBeLeftToRight: Optional[int]
+    CanBeRightToLeft: Optional[int]
+    CanBeBottomToTop: Optional[int]
+    CanBeTopToBottom: Optional[int]
+    LeftToRightLabel = ''
+    RightToLeftLabel = ''
+    TopToBottomLabel = ''
+    BottomToTopLabel = ''
+    LeftToRightCode = ''
+    RightToLeftCode = ''
+    TopToBottomCode = ''
+    BottomToTopCode = ''
+
+class _WedgeList(BaseModel):
+    Wedge: List[_Wedge] = None
 
 # class _ElectronModel(BaseModel):
 #     IncidentEnergy: Optional[float]
@@ -115,7 +122,7 @@ class _Machine(BaseModel):
     # GantryAngle: Optional[_GantryAngle] = None
     # CollimatorAngle: Optional[_CollimatorAngle] = None
     # ElectronApplicatorList: Optional[_ElectronApplicatorList] = None
-    # WedgeList: Optional[_WedgeList] = None
+    WedgeList: Optional[_WedgeList] = None
 
 class PFMachine(BaseModel):
     Machine: List[_Machine] = None

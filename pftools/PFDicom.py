@@ -1016,35 +1016,44 @@ class PFDicom():
         seq = pydicom.sequence.Sequence()
         ds_wdg = Dataset()
         ds_wdg.WedgeNumber = 1
+        wdgid_append = ''
         if wdg.WedgeName.upper() == 'DYNAMIC' or wdg.WedgeName.upper == 'EDW':            
             ds_wdg.WedgeType = 'DYNAMIC'
             ds_wdg.WedgeID = 'EDW'
-        elif wdg.WedgeName.upper == 'STANDARD':
+            ds_wdg.WedgeAngle = wdg.Angle
+            ds_wdg.SourceToWedgeTrayDistance = 530
+        elif wdg.WedgeName[-6:].upper() == 'DEGREE':
             ds_wdg.WedgeType = 'STANDARD'
-            ds_wdg.WedgeID = 'WDG'
+            ds_wdg.WedgeID = 'W'
+            ds_wdg.WedgeAngle = wdg.WedgeName[:2]
+            ds_wdg.SourceToWedgeTrayDistance = 574
+            if   ds_wdg.WedgeAngle == 15: wdgid_append = '30'
+            elif ds_wdg.WedgeAngle == 30: wdgid_append = '30'
+            elif ds_wdg.WedgeAngle == 45: wdgid_append = '20'
+            elif ds_wdg.WedgeAngle == 60: wdgid_append = '15'
         else:
             ds_wdg.WedgeType = wdg.WedgeName
+            ds_wdg.WedgeID = 'NoWdg'
+            ds_wdg.WedgeAngle = 0
+            ds_wdg.SourceToWedgeTrayDistance = 0
 
-        ds_wdg.WedgeAngle = wdg.Angle
         ds_wdg.WedgeFactor = ''
         if wdg.Orientation == 'WedgeBottomToTop':
             ds_wdg.WedgeOrientation = '0'
-            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'IN'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(ds_wdg.WedgeAngle)+'IN'
         elif wdg.Orientation == 'WedgeTopToBottom':
             ds_wdg.WedgeOrientation = '180'
-            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'OUT'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(ds_wdg.WedgeAngle)+'OUT'
         elif wdg.Orientation == 'WedgeLeftToRight':
             ds_wdg.WedgeOrientation = '270'
-            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'L'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(ds_wdg.WedgeAngle)+'L'+wdgid_append
         elif wdg.Orientation == 'WedgeRightToLeft':
             ds_wdg.WedgeOrientation = '90'
-            ds_wdg.WedgeID = ds_wdg.WedgeID+str(wdg.Angle)+'R'
+            ds_wdg.WedgeID = ds_wdg.WedgeID+str(ds_wdg.WedgeAngle)+'R'+wdgid_append
         else:
             ds_wdg.WedgeOrientation = '0'
             ds_wdg.WedgeID = 'Unknown'
 
-        # ds_wdg.WedgeOrientation = ''
-        # ds_wdg.SourceToWedgeTrayDistance = ''
         # ds_wdg.EffectiveWedgeAngle = ''
         # ds_wdg.AccessoryCode = ''
 
@@ -1056,6 +1065,21 @@ class PFDicom():
         cp_idx = 0 #idx_beam * 100
         cp_wgt = 0.0
         ctrl_points = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint
+        # Wedge info if it exists
+        wdg = ctrl_points[0].WedgeContext
+        if wdg.WedgeName.upper() != 'NO WEDGE':
+            wdgpos_seq = pydicom.sequence.Sequence()
+            ds_wdg = Dataset()
+            ds_wdg.ReferencedWedgeNumber = 1
+            if wdg.Orientation == 'WedgeBottomToTop':
+                ds_wdg.WedgePosition = 'IN'
+            elif wdg.Orientation == 'WedgeTopToBottom':
+                ds_wdg.WedgePosition = 'OUT'
+            elif wdg.Orientation == 'WedgeRightToLeft':
+                ds_wdg.WedgePosition = 'IN'
+            elif wdg.Orientation == 'WedgeLeftToRight':
+                ds_wdg.WedgePosition = 'IN'
+            wdgpos_seq.append(ds_wdg)
         for cp in ctrl_points:
             ds_cp = Dataset()
             ds_cp.ControlPointIndex = cp_idx
@@ -1063,20 +1087,8 @@ class PFDicom():
             ds_cp.NominalBeamEnergy = beam.MachineEnergyName[:-1]
             ds_cp.DoseRateSet = 600
             # Wedge
-            wdg = ctrl_points[0].WedgeContext
             if wdg.WedgeName.upper() != 'NO WEDGE':
-                ds_cp.WedgePositionSequence = pydicom.sequence.Sequence()
-                ds_wdg = Dataset()
-                ds_wdg.ReferencedWedgeNumber = 1
-                if wdg.Orientation == 'WedgeBottomToTop':
-                    ds_wdg.WedgePosition = 'IN'
-                elif wdg.Orientation == 'WedgeTopToBottom':
-                    ds_wdg.WedgePosition = 'OUT'
-                elif wdg.Orientation == 'WedgeRightToLeft':
-                    ds_wdg.WedgePosition = 'RGT'
-                elif wdg.Orientation == 'WedgeLeftToRight':
-                    ds_wdg.WedgePosition = 'LFT'
-                ds_cp.WedgePositionSequence.append(ds_wdg)
+                ds_cp.WedgePositionSequence = wdgpos_seq
 
             ds_cp.BeamLimitingDevicePositionSequence = self._getBeamLimitingDevicePositionSequence(cp)
             ds_cp.GantryAngle = cp.Gantry
@@ -1184,7 +1196,7 @@ class PFDicom():
             # Wedge             
             cpt0 = beam.CPManager.CPManagerObject[0].ControlPointList.ControlPoint[0]
             UWedgeName = cpt0.WedgeContext.WedgeName.upper()
-            if  UWedgeName == 'DYNAMIC' or UWedgeName == 'EDW' or UWedgeName == 'STANDARD':
+            if  UWedgeName != 'NO WEDGE':
                 ds_bm.NumberOfWedges = 1
                 ds_bm.WedgeSequence = self._getWedgeSequence(beam, beam_idx)
             else:  # "No Wedge"
