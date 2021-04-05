@@ -1021,7 +1021,7 @@ class PFDicom():
             ds_wdg.WedgeType = 'DYNAMIC'
             ds_wdg.WedgeID = 'EDW'
             ds_wdg.WedgeAngle = wdg.Angle
-            ds_wdg.SourceToWedgeTrayDistance = 530
+            # ds_wdg.SourceToWedgeTrayDistance = 530
         elif wdg.WedgeName[-6:].upper() == 'DEGREE':
             ds_wdg.WedgeType = 'STANDARD'
             ds_wdg.WedgeID = 'W'
