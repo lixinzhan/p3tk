@@ -43,10 +43,9 @@ We had Pinnacle3 system as the TPS in our center. In 2011, we fully moved away
 to Eclipse for better system integration with ARIA. 
 Old treatment plans were still kept in Pinnacle. Whenever a Pinnacle plan 
 was required for review, we would export the plan to Eclipse and do a re-calc. 
-Last year (2020), the Pinnacle system, with no vendor support for years, 
-was finally down. 
+In 2020, the Pinnacle system, with no vendor support for years, was finally down. 
 We still receive requests of retrieving Pinnacle plans, which 
-is bring us a huge challenge. We have the options of bringing the vendor back 
+has brought us a huge challenge. We have the options of bringing the vendor back 
 to rebuild the whole Pinnacle system, or re-creating plans based 
 on information in the Pinnacle backup files, which are fortunately in text format.
 
