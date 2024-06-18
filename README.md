@@ -7,25 +7,32 @@ by others.
 
 To setup the running environment for the first time, run at the project directory:
 
+```
 python3 -m venv venv
 . rc.pyenv
 pip install -upgrade pip
 pip install -r requirements.txt
+```
 
 Later on, to bring the development/running environment back, simply run
 
+```
 . rc.pyenv
-
+```
 
 To create DICOM files from your Pinnacle backup, run command below:
 
+```
 python3 app.py -i backup_patient_foler
+```
 
 or
 
+```
 python3 app.py -i backup_patient_folder -o dicom_output_folder -t ALL
+```
 
-The '-t' switch specifies the output DICOM files be CT, RS, RP, RD, or ALL.
+The `-t` switch specifies the output DICOM files be CT, RS, RP, RD, or ALL.
 
 
 =========================================================================
