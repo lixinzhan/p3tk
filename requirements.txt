@@ -3,5 +3,5 @@ pydicom >=2.0, <3.0
 pytest
 pylint
 numpy
-pydantic
+pydantic>=1.10.0, <2.0.0
 colour
