@@ -389,8 +389,11 @@ class PFDicom():
     def _setImagePlanePixelModule(self, ds, index):
         ds.SliceThickness = self.ImgSetHeader.z_pixdim
 
+        # ImgSetHeader.x_start == x_start (should be)
+        # ImgSetHeader.y_start <=??=> y_start??
         ds.ImagePositionPatient = [ 
-            -10.0*self.ImgSetHeader.x_dim*self.ImgSetHeader.x_pixdim/2,
+            -10.0 * self.ImgSetHeader.x_start,
+            #-10.0*self.ImgSetHeader.x_dim*self.ImgSetHeader.x_pixdim/2,
             -10.0*(self.ImgSetHeader.couch_height+self.ImgSetHeader.y_dim*self.ImgSetHeader.y_pixdim/2),
             -10.0*self.ImageInfo[index].TablePosition
             ]
