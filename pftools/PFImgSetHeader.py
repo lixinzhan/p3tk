@@ -25,10 +25,10 @@ class PFImgSetHeader(BaseModel):
     binary_header_size: Optional[int]
     manufacturer = ''
     model = ''
-    couch_pos: Optional[float]
-    couch_height: Optional[float]
-    X_offset: Optional[float]
-    Y_offset: Optional[float]
+    couch_pos: Optional[float] = 0.0
+    couch_height: Optional[float] = 0.0
+    X_offset: Optional[float] = 0.0
+    Y_offset: Optional[float] = 0.0
     dataset_modified = 0
     study_id = ''
     exam_id = ''
