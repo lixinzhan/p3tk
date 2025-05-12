@@ -1,11 +1,11 @@
 # p3tk
+
 Pinnacle3 Toolkit for Pinnacle backup file processing
 
-Pinnacle3 backup files cannot be imported directly by other treatment planning system, such as Eclipse. 
-This toolkit will create the DICOM files from Pinnacle backups to be readily imported
-by others.
+Pinnacle3 backup files cannot be imported directly by other treatment planning systems (TPS), such as Eclipse. 
+This toolkit will generate DICOM files from Pinnacle backups which can be readily imported by other TPS.
 
-To setup the running environment for the first time, run at the project directory:
+To setup the running environment for the first run, you need to go to the project directory and run commands below:
 
 ```
 python3 -m venv venv
@@ -14,7 +14,7 @@ pip install -upgrade pip
 pip install -r requirements.txt
 ```
 
-Later on, to bring the development/running environment back, simply run
+Later on, to bring the development/running environment back, simply run:
 
 ```
 . rc.pyenv
@@ -23,7 +23,7 @@ Later on, to bring the development/running environment back, simply run
 To create DICOM files from your Pinnacle backup, run command below:
 
 ```
-python3 app.py -i backup_patient_foler
+python3 app.py -i backup_patient_folder
 ```
 
 or
