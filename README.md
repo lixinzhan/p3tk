@@ -10,7 +10,7 @@ To setup the running environment for the first run, you need to go to the projec
 ```
 python3 -m venv venv
 . rc.pyenv
-pip install -upgrade pip
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
